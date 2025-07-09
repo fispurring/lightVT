@@ -41,7 +41,6 @@
 To use the translation function, you must have a large language model. The source code does not include large model files.
 
 If you don't have one on your computer, download model files from the following sources:
-- 📦 Built-in with project Releases
 - 🤗 [HuggingFace Hub](https://huggingface.co/)
 
 Recommended models:
@@ -149,7 +148,6 @@ Recommended models:
 要使用翻译功能，必须要有大语言模型，源代码不包含大模型文件。
 
 如果你的电脑上没有，从以下来源下载模型文件：
-- 📦 项目 Releases 包内自带
 - 🤗 [HuggingFace Hub](https://huggingface.co/)  
 
 推荐模型：
