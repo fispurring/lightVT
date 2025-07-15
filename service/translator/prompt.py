@@ -173,6 +173,12 @@ def generate_translation_prompt(context_chunk: List[Dict], main_indices: List[in
 【翻译目标】（编号{start_num}-{end_num}，共{expected_count}条）：
 {target_text}
 
+【思维步骤】
+1. 阅读上下文，理解整体语境和情感色彩，但不要翻译这部分内容
+2. 分析翻译目标，理清一共有多少条字幕（一个编号及编号下面的内容算一条）
+3. 执行翻译，确保翻译出来的字幕数量和编号与翻译目标一致
+4. 检查每个条目的编号和内容，确保编号和内容之间有换行，确保没有遗漏或合并条目
+
 【重要指令】
 1. 只翻译"翻译目标"部分的{expected_count}条内容
 2. "上下文参考"仅用于理解语境，绝对不要翻译
@@ -232,6 +238,10 @@ def generate_review_translation_prompt(context_chunk: List[Dict], main_indices: 
 
 错误译文：
 {translated_text}
+
+【思维步骤】
+1. 检查原文与错误译文的每一条字幕，找出翻译不匹配的条目
+2. 重新翻译原文，确保新译文每条字幕的编号和内容与原文严格对应
 
 【重要】格式要求：
 1. 必须输出 {expected_count} 条字幕
