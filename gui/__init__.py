@@ -11,6 +11,7 @@ from service import localization
 from defs import FileType, get_supported_subtitle_types, get_supported_video_types
 from gui.options_dialog import OptionsDialog
 import utils
+import sys
 
 class LightVTGUI:
     """LightVT GUI界面类"""
@@ -20,7 +21,13 @@ class LightVTGUI:
         self.root.title("LightVT")
         self.root.geometry("650x700")
         self.root.minsize(650, 700)
-        self.root.iconbitmap(utils.get_resource_path("assets/icon.ico"))  # 设置窗口图标
+        # self.root.iconbitmap(utils.get_resource_path("assets/icon.ico"))  # 设置窗口图标
+        # 仅在 Windows 下设置 .ico 图标
+        if sys.platform.startswith("win"):
+            self.root.iconbitmap(utils.get_resource_path("assets/icon.ico"))
+        elif sys.platform == "darwin":
+            # macOS 可选：不设置或用 .icns（Tkinter 不直接支持 .icns）
+            pass
         
         # 设置颜色主题和外观模式
         ctk.set_appearance_mode("dark")  # 跟随系统主题 ("dark", "light", "system")
