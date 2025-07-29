@@ -8,6 +8,7 @@ from . import prompt
 from . import llm_helper
 import re
 from service import localization
+from service import glossary
 
 logger = get_logger("LightVT")
 
@@ -158,6 +159,12 @@ def translate_srt_text(
         # 初始化LLM
         log_fn(localization.get("log_initializing_translation_model").format(n_gpu_layers=n_gpu_layers))
         llm = llm_helper.create_llm(model_path, n_gpu_layers)
+        
+        # 检测术语表
+        if glossary.is_empty():
+            log_fn(localization.get("log_no_glossary"))
+        else:
+            log_fn(localization.get("log_glossary_found"))
         
         # 生成系统提示
         system_prompt = prompt.generate_system_prompt(source_lang, target_lang)

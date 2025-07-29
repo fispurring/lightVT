@@ -92,3 +92,8 @@ def generate_glossary_prompt() -> str:
 【术语表】
 {terms_text}
 """
+
+def is_empty() -> bool:
+    """检查术语表是否为空"""
+    global glossary
+    return len(glossary) == 0

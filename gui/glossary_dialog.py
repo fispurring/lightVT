@@ -8,7 +8,7 @@ from tkinter import messagebox
 import tkinter as tk
 from tksheet import Sheet
 from service import glossary
-from service.localization import get as localization_get
+from service import localization
 from service.log import get_logger
 
 logger = get_logger("GlossaryDialog")
@@ -20,8 +20,8 @@ class GlossaryDialog(ctk.CTkToplevel):
         super().__init__(parent)
         
         self.filename = filename
-        
-        self.title("📚 术语表管理")
+
+        self.title(localization.get("glossary_management"))
         self.geometry("640x700")
         self.minsize(640, 700)
         
@@ -72,28 +72,34 @@ class GlossaryDialog(ctk.CTkToplevel):
     
     def create_header_section(self, parent):
         """创建顶部信息栏 - 紧凑版"""
-        header_frame = ctk.CTkFrame(parent, height=70, corner_radius=10)  # 🔥 减少高度
+        header_frame = ctk.CTkFrame(parent, height=90, corner_radius=10)  # 🔥 减少高度
         header_frame.pack(fill="x", pady=(0, 12))
         header_frame.pack_propagate(False)
         
         # 左侧标题
         left_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
-        left_frame.pack(side="left", fill="y", padx=15, pady=12)  # 🔥 减少内边距
+        left_frame.pack(side="left", fill="y", padx=15, pady=12)
+        left_frame.pack_propagate(True) 
         
         title_label = ctk.CTkLabel(
             left_frame, 
-            text="📚 术语表管理", 
-            font=ctk.CTkFont(size=18, weight="bold")  # 🔥 减少字体大小
+            text=f"📚 {localization.get('glossary_management')}", 
+            font=ctk.CTkFont(size=18, weight="bold")
         )
         title_label.pack(anchor="w")
         
         subtitle_label = ctk.CTkLabel(
             left_frame,
-            text="如果没有填写术语表，翻译时会智能生成术语表，以确保翻译术语的一致性。",
-            font=ctk.CTkFont(size=11),  # 🔥 减少字体大小
-            text_color=("gray60", "gray40")
+            width=330,
+            height=80,
+            wraplength=330,
+            text=localization.get("glossary_dialog_tips"),
+            font=ctk.CTkFont(size=11),
+            text_color=("gray60", "gray40"),
+            justify="left",
+            anchor="nw"
         )
-        subtitle_label.pack(anchor="w", pady=(3, 0))
+        subtitle_label.pack(anchor="w", pady=(3, 0)) 
         
         # 右侧统计信息
         right_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
@@ -101,8 +107,8 @@ class GlossaryDialog(ctk.CTkToplevel):
         
         self.stats_label = ctk.CTkLabel(
             right_frame,
-            text="📊 术语: 0 个",  # 🔥 简化文字
-            font=ctk.CTkFont(size=14, weight="bold"),  # 🔥 减少字体大小
+            text="", 
+            font=ctk.CTkFont(size=14, weight="bold"), 
             text_color=("#1f6aa5", "#4d9bdb")
         )
         self.stats_label.pack(anchor="e")
@@ -110,7 +116,7 @@ class GlossaryDialog(ctk.CTkToplevel):
         # 操作提示
         hint_label = ctk.CTkLabel(
             right_frame,
-            text="💡 双击编辑 | 支持快捷键",  # 🔥 简化提示文字
+            text=f"💡 {localization.get('glossary_dialog_edit_tips')}",  # 🔥 简化提示文字
             font=ctk.CTkFont(size=10),
             text_color=("gray50", "gray60")
         )
@@ -129,7 +135,7 @@ class GlossaryDialog(ctk.CTkToplevel):
         # 添加行
         add_button = ctk.CTkButton(
             toolbar_frame,
-            text="➕ 添加行",
+            text=f"➕ {localization.get('add_term')}",
             command=self.add_empty_row,
             width=85,    # 🔥 减少宽度
             height=32,   # 🔥 减少高度
@@ -142,7 +148,7 @@ class GlossaryDialog(ctk.CTkToplevel):
         # 删除行
         delete_button = ctk.CTkButton(
             toolbar_frame,
-            text="🗑️ 删除",
+            text=f"🗑️ {localization.get('delete_term')}",
             command=self.delete_selected_rows,
             width=75,    # 🔥 减少宽度
             height=32,
@@ -155,7 +161,7 @@ class GlossaryDialog(ctk.CTkToplevel):
         # 清空表格
         clear_button = ctk.CTkButton(
             toolbar_frame,
-            text="🧹 清空",
+            text=f"🧹 {localization.get('clear_glossary')}",
             command=self.clear_all,
             width=70,
             height=32,
@@ -168,7 +174,7 @@ class GlossaryDialog(ctk.CTkToplevel):
         # AI填充按钮
         smart_button = ctk.CTkButton(
             toolbar_frame,
-            text="🤖 AI填充",
+            text=f"🤖 {localization.get('smart_fill')}",
             command=self.smart_fill_glossary,
             width=85,
             height=32,
@@ -181,7 +187,7 @@ class GlossaryDialog(ctk.CTkToplevel):
         # 导入按钮
         import_button = ctk.CTkButton(
             toolbar_frame,
-            text="📥 导入",
+            text=f"📥 {localization.get('import_glossary')}",
             command=self.import_glossary,
             width=70,   # 🔥 增加宽度以容纳文字
             height=32,
@@ -194,7 +200,7 @@ class GlossaryDialog(ctk.CTkToplevel):
         # 导出按钮
         export_button = ctk.CTkButton(
             toolbar_frame,
-            text="📤 导出",
+            text=f"📤 {localization.get('export_glossary')}",
             command=self.export_glossary,
             width=70,   # 🔥 增加宽度以容纳文字
             height=32,
@@ -272,8 +278,8 @@ class GlossaryDialog(ctk.CTkToplevel):
         )
         
         # 🔥 设置列标题
-        self.sheet.headers(["原文术语", "译文术语"])
-        
+        self.sheet.headers([localization.get("source_term"), localization.get("target_term")])
+
         # # 🔥 设置列宽
         # self.sheet.default_column_width(480)
         
@@ -326,7 +332,7 @@ class GlossaryDialog(ctk.CTkToplevel):
         # 取消按钮
         cancel_button = ctk.CTkButton(
             button_right_frame,
-            text="❌ 取消",
+            text=f"❌ {localization.get('cancel')}",
             command=self.on_close,
             width=100,
             height=40,
@@ -339,7 +345,7 @@ class GlossaryDialog(ctk.CTkToplevel):
         # 保存按钮
         self.save_button = ctk.CTkButton(
             button_right_frame,
-            text="💾 保存",
+            text=f"💾 {localization.get('save')}",
             command=self.save_glossary,
             width=100,
             height=40,
@@ -409,19 +415,19 @@ class GlossaryDialog(ctk.CTkToplevel):
     def update_stats(self):
         """更新术语统计"""
         valid_terms = len(self.glossary_data)
-        self.stats_label.configure(text=f"📊 术语数量: {valid_terms}")
-    
+        self.stats_label.configure(text= localization.get("glossary_count").format(count=valid_terms))
+
     def update_save_status(self, has_changes):
         """更新保存状态"""
         if has_changes:
             self.save_button.configure(
-                text="💾 保存*",
+                text=f"💾 {localization.get('save')}*",
                 fg_color="#28a745",
                 hover_color="#218838"
             )
         else:
             self.save_button.configure(
-                text="💾 保存",
+                text=f"💾 {localization.get('save')}",
                 fg_color="#007bff",
                 hover_color="#0056b3"
             )
@@ -588,7 +594,7 @@ class GlossaryDialog(ctk.CTkToplevel):
                     import csv
                     with open(filename, 'w', newline='', encoding='utf-8-sig') as f:  # 使用BOM避免乱码
                         writer = csv.writer(f)
-                        writer.writerow(['Original Term', 'Translated Term'])
+                        writer.writerow(['Source Term', 'Target Term'])
                         for source, target in self.glossary_data.items():
                             writer.writerow([source, target])
                 
