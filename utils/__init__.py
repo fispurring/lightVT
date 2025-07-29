@@ -2,6 +2,7 @@ import sys
 import os
 from pathlib import Path
 import pynvml
+import base64
 
 def get_gpu_info():
     """获取GPU信息"""
@@ -81,3 +82,24 @@ def get_resource_path(relative_path):
         base_path = Path.cwd()
     
     return os.path.join(base_path, relative_path)
+
+def get_filename(file_path: str, without_extension: bool = False) -> str:
+    """从文件路径中获取文件名"""
+    filename = os.path.basename(file_path)
+    if without_extension:
+        filename = os.path.splitext(filename)[0]
+    return filename
+
+def string_to_base64(text: str) -> str:
+    """将字符串编码为 Base64"""
+    text_bytes = text.encode('utf-8')
+    base64_bytes = base64.b64encode(text_bytes)
+    base64_string = base64_bytes.decode('utf-8')
+    return base64_string
+
+def base64_to_string(base64_string: str) -> str:
+    """将 Base64 解码为字符串"""
+    base64_bytes = base64_string.encode('utf-8')
+    text_bytes = base64.b64decode(base64_bytes)
+    text = text_bytes.decode('utf-8')
+    return text

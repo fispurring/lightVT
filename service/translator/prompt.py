@@ -1,5 +1,6 @@
 from typing import Dict, List, Callable, Any, Optional, Tuple, Any
 from service import localization
+from service import glossary
 
 def generate_system_prompt(source_lang: str, target_lang: str) -> str:
     """生成系统提示"""
@@ -164,6 +165,9 @@ def generate_translation_prompt(context_chunk: List[Dict], main_indices: List[in
     start_num = context_chunk[main_indices[0]]['id']
     end_num = context_chunk[main_indices[-1]]['id']
     
+    # 术语表
+    glossary_prompt = glossary.generate_glossary_prompt()
+    
     return f"""/nothink
 请翻译指定的字幕内容。
 
@@ -173,10 +177,12 @@ def generate_translation_prompt(context_chunk: List[Dict], main_indices: List[in
 【翻译目标】（编号{start_num}-{end_num}，共{expected_count}条）：
 {target_text}
 
+{glossary_prompt}
+
 【思维步骤】
 1. 阅读上下文，理解整体语境和情感色彩，但不要翻译这部分内容
 2. 分析翻译目标，理清一共有多少条字幕（一个编号及编号下面的内容算一条）
-3. 执行翻译，确保翻译出来的字幕数量和编号与翻译目标一致
+3. 执行翻译，确保翻译出来的字幕数量和编号与翻译目标一致，术语表中的术语请严格按照对应关系翻译
 4. 检查每个条目的编号和内容，确保编号和内容之间有换行，确保没有遗漏或合并条目
 
 【重要指令】

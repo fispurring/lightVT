@@ -4,8 +4,9 @@ import sys
 from pathlib import Path
 from typing import Dict
 import os
+import threading
 
-# 使用示例
+lock = threading.Lock()
 loggerDict: Dict[str,logging.Logger] = {}
 
 def setup_logger(name: str = "LightVT", log_file: str = "app.log", level: int = logging.DEBUG):
@@ -40,7 +41,7 @@ def setup_logger(name: str = "LightVT", log_file: str = "app.log", level: int = 
         interval=1,            # 轮转间隔
         backupCount=30,        # 保留文件数量
         encoding='utf-8',
-        delay=False,
+        delay=True,
         utc=False
     )
     file_handler.setLevel(logging.DEBUG)
@@ -57,10 +58,10 @@ def setup_logger(name: str = "LightVT", log_file: str = "app.log", level: int = 
 
 def get_logger(name: str = "LightVT") -> logging.Logger:
     """获取已设置的日志器"""
-    logger = loggerDict.get(name)
-    if logger is None:
-        setup_logger(name)
-        logger = loggerDict[name] = logging.getLogger(name)
-    return logger
+    with lock:
+        logger = loggerDict.get(name)
+        if logger is None:
+            logger = loggerDict[name] = setup_logger(name)
+        return logger
 
 __all__ = ["get_logger"]

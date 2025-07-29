@@ -12,6 +12,8 @@ from defs import FileType, get_supported_subtitle_types, get_supported_video_typ
 from gui.options_dialog import OptionsDialog
 import utils
 import sys
+from gui.glossary_dialog import GlossaryDialog
+from toolz import pipe
 
 class LightVTGUI:
     """LightVT GUI界面类"""
@@ -110,11 +112,11 @@ class LightVTGUI:
         title_frame.grid(row=0, column=0, sticky="ew", padx=20, pady=(20, 10))
         
         title_label = ctk.CTkLabel(title_frame, text=localization.get("title"), 
-                                  font=ctk.CTkFont(size=24, weight="bold"))
+            font=ctk.CTkFont(size=24, weight="bold"))
         title_label.pack(side="left")
         
         subtitle_label = ctk.CTkLabel(title_frame, text=localization.get("subtitle"), 
-                                     font=ctk.CTkFont(size=12))
+            font=ctk.CTkFont(size=12))
         subtitle_label.pack(side="left", padx=(10, 0), pady=5)
         
         # 选项按钮
@@ -127,6 +129,17 @@ class LightVTGUI:
             font=ctk.CTkFont(size=16)
         )
         self.options_button.pack(side="right", padx=(10, 0))
+        
+        # 术语表按钮
+        self.glossary_button = ctk.CTkButton(
+            title_frame,
+            text="📚",
+            command=self.open_glossary_dialog,
+            width=40,
+            height=32,
+            font=ctk.CTkFont(size=16)
+        )
+        self.glossary_button.pack(side="right", padx=(10, 0))
         
         # 增加语言选择下拉菜单
         current_lang_code = localization.get_current_language()
@@ -151,7 +164,7 @@ class LightVTGUI:
         
         # 为frame添加标题
         file_label = ctk.CTkLabel(file_frame, text=localization.get("file_settings"), 
-                                 font=ctk.CTkFont(size=14, weight="bold"))
+            font=ctk.CTkFont(size=14, weight="bold"))
         file_label.grid(row=0, column=0, sticky="w", padx=10, pady=(10, 5))
         
         # 设置网格列权重
@@ -323,6 +336,17 @@ class LightVTGUI:
         # 处理线程
         self.processing_thread = None
         self.stop_event = threading.Event()
+        
+    def open_glossary_dialog(self):
+        """打开术语表对话框"""
+        filename = pipe(self.input_var.get(),
+                        utils.get_filename, 
+                        utils.string_to_base64)
+        dialog = GlossaryDialog(self.root, filename)
+        self.root.wait_window(dialog)
+        
+        # 术语表更新后的处理（如果需要）
+        self.log_message("术语表已更新")
         
     def set_language(self, lang: str):
         """切换语言"""
@@ -496,7 +520,7 @@ class LightVTGUI:
         
         if not self.output_var.get():
             messagebox.showerror(localization.get("error"), 
-                                 localization.get("please_select_output_error"))
+                                localization.get("please_select_output_error"))
             return
         
         # 根据处理模式和文件类型验证模型路径
@@ -507,7 +531,7 @@ class LightVTGUI:
         if processing_mode_v2k[processing_mode] == "translate":
             if not self.model_var.get():
                 messagebox.showerror(localization.get("error"), 
-                                     localization.get("translation_mode_error"))
+                                    localization.get("translation_mode_error"))
                 return
         
         # 禁用开始按钮，启用停止按钮
