@@ -10,16 +10,22 @@ from tksheet import Sheet
 from service import glossary
 from service import localization
 from service.log import get_logger
+from interface import generate_glossary
+import threading
 
 logger = get_logger("GlossaryDialog")
 
 class GlossaryDialog(ctk.CTkToplevel):
     """术语表编辑对话框 - tksheet 版本"""
     
-    def __init__(self, parent, filename: str):
+    def __init__(self, parent, filename: str, input_path:str, model_path: str, target_lang: str,n_gpu_layers: int = -1):
         super().__init__(parent)
         
         self.filename = filename
+        self.input_path = input_path
+        self.model_path = model_path
+        self.target_lang = target_lang
+        self.n_gpu_layers = n_gpu_layers
 
         self.title(localization.get("glossary_management"))
         self.geometry("640x700")
@@ -33,7 +39,7 @@ class GlossaryDialog(ctk.CTkToplevel):
         self.center_window()
         
         # 初始化数据
-        glossary.load_glossary(filename)
+        glossary.load_glossary(glossary.to_glossary_filename(self.filename))
         self.glossary_data = glossary.get_terms()
         self.has_changes = False
         
@@ -481,15 +487,31 @@ class GlossaryDialog(ctk.CTkToplevel):
     
     def smart_fill_glossary(self):
         """AI智能填充术语表"""
-        messagebox.showinfo(
-            "功能开发中", 
-            "🤖 AI智能填充功能正在开发中！\n\n"
-            "即将支持：\n"
-            "• 从字幕文件提取专业术语\n"
-            "• AI自动生成翻译对照\n"
-            "• 术语一致性检查\n"
-            "• 上下文相关翻译建议"
-        )
+
+        threading.Thread(target=self.process_fill_glossary, daemon=True).start()
+        
+    def process_fill_glossary(self):
+        """处理AI智能填充术语表"""
+        try:
+            # 调用生成术语表的函数
+            args = {
+                'input': self.input_path,
+                'target_language': self.target_lang,
+                'model_path': self.model_path,
+                'n_gpu_layers': self.n_gpu_layers,
+            }
+            self.glossary_data = generate_glossary(args)
+            
+            # 重新加载数据到表格
+            self.load_data()
+            
+            # # 更新状态
+            # self.has_changes = True
+            # self.update_stats()
+            # self.update_save_status(True)
+            
+        except Exception as e:
+            messagebox.showerror("智能填充失败", f"❌ 智能填充过程中发生错误：\n\n{str(e)}")
     
     def import_glossary(self):
         """导入术语表"""
@@ -616,7 +638,7 @@ class GlossaryDialog(ctk.CTkToplevel):
             
             # 更新全局术语表
             glossary.glossary = self.glossary_data.copy()
-            glossary.save_glossary(self.filename)
+            glossary.save_glossary(glossary.to_glossary_filename(self.filename))
             
             self.has_changes = False
             self.update_save_status(False)

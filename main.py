@@ -1,7 +1,7 @@
 import argparse
 import sys
 from pathlib import Path
-from interface import process_video_file, get_file_type
+from interface import process_video_file
 from service.log import get_logger
 import service.settings as settings
 import utils

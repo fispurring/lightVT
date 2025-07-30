@@ -8,6 +8,8 @@ import re
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 from ..log import get_logger
+from toolz import keyfilter, pipe
+import utils
 
 logger = get_logger("Glossary")
 glossary: Dict[str, str] = {}
@@ -80,13 +82,18 @@ def apply_glossary_to_text( text: str) -> str:
     
     return result
 
-def generate_glossary_prompt() -> str:
+def generate_glossary_prompt(source_text:str) -> str:
     """生成包含术语表的提示词"""
     global glossary
     if not glossary:
         return ""
+    
+    source_glossary = keyfilter(lambda k: k in source_text.lower(), glossary)
+    
+    if not source_glossary or len(source_glossary) == 0:
+        return ""
 
-    terms_text = "\n".join([f"- {source} → {target}" for source, target in glossary.items()])
+    terms_text = "\n".join([f"- {source} → {target}" for source, target in source_glossary.items()])
 
     return f"""
 【术语表】
@@ -97,3 +104,39 @@ def is_empty() -> bool:
     """检查术语表是否为空"""
     global glossary
     return len(glossary) == 0
+
+def generate_from_subtitle_text(subtitle_text: str, target_language: str, model_path: str, n_gpu_layers: int = -1) -> Dict[str, str]:
+    """从字幕文本智能生成术语表"""
+    try:
+        from service.glossary.ai_generator import generate_glossary_from_subtitle, ExtractionConfig
+        
+        # 🔥 简化调用，不需要传入翻译函数
+        config = ExtractionConfig(
+            chunk_size=1000,          # 每片段2000字符
+            min_term_frequency=2,     # 最少出现2次
+            max_terms_per_chunk=15,   # 每片段最多15个术语
+            min_term_length=3,        # 最小长度3个字符
+            max_term_length=50        # 最大长度50个字符
+        )
+        
+        # 🔥 直接调用，内部处理翻译
+        generated_glossary = generate_glossary_from_subtitle(
+            subtitle_text, 
+            target_language, 
+            model_path,
+            n_gpu_layers=n_gpu_layers,
+            config=config
+        )
+        
+        logger.info(f"从字幕文本生成术语表完成，共 {len(generated_glossary)} 个术语")
+        return generated_glossary
+        
+    except Exception as e:
+        logger.error(f"从字幕文本生成术语表失败: {e}")
+        return {}
+    
+def to_glossary_filename(file_path:str) -> str:
+    """将文件路径转换为术语表文件名"""
+    return pipe(file_path,
+                utils.get_filename, 
+                utils.string_to_base64)

@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import pynvml
 import base64
+from defs import FileType, get_supported_subtitle_types, get_supported_video_types
 
 def get_gpu_info():
     """获取GPU信息"""
@@ -103,3 +104,16 @@ def base64_to_string(base64_string: str) -> str:
     text_bytes = base64.b64decode(base64_bytes)
     text = text_bytes.decode('utf-8')
     return text
+
+def get_file_type(file_path):
+    """
+    根据文件路径获取文件类型
+    file_path: 文件路径字符串
+    返回: FileType 枚举值
+    """
+    if file_path.lower().endswith(get_supported_subtitle_types()):
+        return FileType.SUBTITLE
+    elif file_path.endswith(get_supported_video_types()):
+        return FileType.VIDEO
+    else:
+        raise ValueError("不支持的文件类型")

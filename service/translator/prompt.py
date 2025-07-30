@@ -166,7 +166,7 @@ def generate_translation_prompt(context_chunk: List[Dict], main_indices: List[in
     end_num = context_chunk[main_indices[-1]]['id']
     
     # 术语表
-    glossary_prompt = glossary.generate_glossary_prompt()
+    glossary_prompt = glossary.generate_glossary_prompt(target_text)
     
     return f"""/nothink
 请翻译指定的字幕内容。

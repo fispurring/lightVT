@@ -6,7 +6,7 @@ from tkinter import messagebox
 import traceback
 import customtkinter as ctk
 from customtkinter import filedialog
-from main import process_video_file,settings,get_logger, get_file_type,utils
+from main import process_video_file,settings,get_logger,utils
 from service import localization
 from defs import FileType, get_supported_subtitle_types, get_supported_video_types
 from gui.options_dialog import OptionsDialog
@@ -339,10 +339,11 @@ class LightVTGUI:
         
     def open_glossary_dialog(self):
         """打开术语表对话框"""
-        filename = pipe(self.input_var.get(),
-                        utils.get_filename, 
-                        utils.string_to_base64)
-        dialog = GlossaryDialog(self.root, filename)
+        dialog = GlossaryDialog(self.root, 
+                                filename=self.input_var.get(),
+                                input_path=self.input_var.get(),
+                                model_path=self.model_var.get(),
+                                target_lang=self.target_lang_var.get())
         self.root.wait_window(dialog)
         
         # 术语表更新后的处理（如果需要）
