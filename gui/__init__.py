@@ -14,13 +14,14 @@ import utils
 import sys
 from gui.glossary_dialog import GlossaryDialog
 from toolz import pipe
+import info
 
 class LightVTGUI:
     """LightVT GUI界面类"""
     logger = get_logger("LightVT")
     def __init__(self, root):
         self.root = root
-        self.root.title("LightVT")
+        self.root.title(f"LightVT - {info.APP_VERSION}")
         self.root.geometry("650x700")
         self.root.minsize(650, 700)
         # self.root.iconbitmap(utils.get_resource_path("assets/icon.ico"))  # 设置窗口图标
