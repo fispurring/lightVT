@@ -103,7 +103,7 @@
     "log_extracting_subtitles": "提取字幕中...",
     "log_translating_subtitles": "翻译字幕中...",
     "glossary_management": "术语表管理",
-    "glossary_dialog_tips": "如果未提供术语表，将在翻译过程中智能生成术语表，以确保翻译术语的一致性。",
+    "glossary_dialog_tips": "术语表将自动应用到翻译过程中。如果未填写，将在翻译过程中智能生成术语表，以确保翻译术语的一致性。",
     "glossary_count": "术语数量: {count}",
     "glossary_dialog_edit_tips": "双击编辑 | 支持快捷键",
     "add_term": "添加",
@@ -118,6 +118,11 @@
     "save": "保存",
     "edit_term": "编辑术语",
     "glossary_updated": "术语表已更新",
-    "log_no_glossary": "未填写术语表!",
-    "log_glossary_found": "已检测到术语表，将应用术语表进行翻译..."
+    "log_no_glossary": "未填写术语表! 将应用自动生成并应用术语表。",
+    "log_glossary_found": "已检测到术语表，将应用术语表进行翻译...",
+    "log_glossary_text_split": "文本已切分为 {count} 个片段...",
+    "log_glossary_chunk_complete": "片段 {chunk_index}/{chunk_count} 处理完成，提取到 {term_count} 个术语",
+    "log_term_frequencies_complete": "统计术语频率完成...",
+    "log_glossary_filter_terms": "筛选出 {count} 个术语...",
+    "log_glossary_batch_complete": "第 {batch_index}/{batch_count} 批术语翻译完成"
 }

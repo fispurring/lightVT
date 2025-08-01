@@ -41,7 +41,7 @@ def setup_logger(name: str = "LightVT", log_file: str = "app.log", level: int = 
         interval=1,            # 轮转间隔
         backupCount=30,        # 保留文件数量
         encoding='utf-8',
-        delay=True,
+        delay=False,
         utc=False
     )
     file_handler.setLevel(logging.DEBUG)

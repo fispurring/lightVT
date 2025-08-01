@@ -12,14 +12,26 @@ def generate_glossary(args):
     model_path = args.get('model_path')
     target_lang = args.get('target_lang', '简体中文')
     n_gpu_layers = args.get('n_gpu_layers', -1)
+    stop_event = args.get('stop_event')
+    update_progress = args.get('update_progress', None)
     if input_file.endswith('.srt'):
         # 如果是SRT文件，直接使用现有的生成逻辑
         with open(input_file, 'r', encoding='utf-8') as f:
             subtitles_text = f.read()
 
-        return glossary.generate_from_subtitle_text(subtitles_text, target_lang, model_path=model_path,n_gpu_layers=n_gpu_layers)
+        return glossary.generate_from_subtitle_text(subtitles_text, 
+                                                    target_lang, 
+                                                    model_path=model_path,
+                                                    n_gpu_layers=n_gpu_layers, 
+                                                    stop_event=stop_event, 
+                                                    update_progress=update_progress)
     else:
         # 如果是视频文件，先提取字幕再生成术语表
         subtitles_text = extract_subtitles(input_file)
         # 使用现有的生成逻辑
-        return glossary.generate_from_subtitle_text(subtitles_text, target_lang, model_path=model_path,n_gpu_layers=n_gpu_layers)
+        return glossary.generate_from_subtitle_text(subtitles_text, 
+                                                    target_lang, 
+                                                    model_path=model_path,
+                                                    n_gpu_layers=n_gpu_layers, 
+                                                    stop_event=stop_event,
+                                                    update_progress=update_progress)

@@ -12,6 +12,7 @@ from service import localization
 from service.log import get_logger
 from interface import generate_glossary
 import threading
+import queue
 
 logger = get_logger("GlossaryDialog")
 
@@ -26,10 +27,12 @@ class GlossaryDialog(ctk.CTkToplevel):
         self.model_path = model_path
         self.target_lang = target_lang
         self.n_gpu_layers = n_gpu_layers
+        
+        self.message_queue = queue.Queue()
 
         self.title(localization.get("glossary_management"))
-        self.geometry("640x700")
-        self.minsize(640, 700)
+        self.geometry("640x800")
+        self.minsize(640, 800)
         
         # 设置模态
         self.transient(parent)
@@ -47,8 +50,14 @@ class GlossaryDialog(ctk.CTkToplevel):
         self.create_widgets()
         self.load_data()
         
+        self.stop_event = threading.Event()
+        self.process_thread = None
+        
         # 绑定关闭事件
         self.protocol("WM_DELETE_WINDOW", self.on_close)
+        
+        # 启动处理队列
+        self.process_queue()
     
     def center_window(self):
         """窗口居中"""
@@ -280,7 +289,7 @@ class GlossaryDialog(ctk.CTkToplevel):
             
             # 🎯 默认尺寸
             height=400,
-            width=750
+            width=600
         )
         
         # 🔥 设置列标题
@@ -325,6 +334,15 @@ class GlossaryDialog(ctk.CTkToplevel):
         
         # 打包显示
         self.sheet.pack(fill="both", expand=True)
+        
+        # 进度条
+        self.progress_var = ctk.StringVar(value=localization.get("ready"))
+        progress_label = ctk.CTkLabel(table_container, textvariable=self.progress_var)
+        progress_label.pack(pady=(0, 5))
+
+        self.progress_bar = ctk.CTkProgressBar(table_container)
+        self.progress_bar.pack(fill="x", padx=10, pady=(0, 15))
+        self.progress_bar.set(0)  # 初始状态
     
     def create_button_section(self, parent):
         """创建底部按钮区域"""
@@ -417,6 +435,34 @@ class GlossaryDialog(ctk.CTkToplevel):
                 # 只保存非空的术语对
                 if source and target:
                     self.glossary_data[source] = target
+
+    def process_queue(self):
+        """处理任务队列"""
+        try:
+            while not self.message_queue.empty():
+                message = self.message_queue.get()
+                value = message.get('value', 0)
+                log_message = message.get('log_message', "")
+                self.progress_bar.set(value)
+                
+                if log_message is not None and log_message.strip() != "":
+                    self.progress_var.set(log_message)
+                    logger.info(log_message)
+                    
+                if value >= 1.0:
+                    self.progress_bar.stop()
+                    self.progress_var.set(localization.get("completed"))
+                    
+                
+        except queue.Empty:
+            pass
+        finally:
+            # 继续处理队列
+            self.after(100, self.process_queue)
+
+    def update_progress(self, log_message, value):
+        """更新进度条"""
+        self.message_queue.put({'value': value, 'log_message': log_message})
     
     def update_stats(self):
         """更新术语统计"""
@@ -487,28 +533,52 @@ class GlossaryDialog(ctk.CTkToplevel):
     
     def smart_fill_glossary(self):
         """AI智能填充术语表"""
-
-        threading.Thread(target=self.process_fill_glossary, daemon=True).start()
+        if self.glossary_data:
+            if not messagebox.askyesno(
+                "确认填充",
+                "⚠️ 术语表已包含数据，继续将覆盖现有内容。\n\n"
+                "是否继续进行AI智能填充？"
+            ):
+                return
+        
+        self.progress_bar.configure(mode="determinate")
+        # self.progress_bar.start()
+        self.progress_var.set(localization.get("processing"))
+        
+        self.process_thread = threading.Thread(
+            target=self.process_fill_glossary,
+            daemon=True
+        )
+        self.process_thread.start()
         
     def process_fill_glossary(self):
         """处理AI智能填充术语表"""
         try:
+            self.stop_event.clear()
+            
             # 调用生成术语表的函数
             args = {
                 'input': self.input_path,
                 'target_language': self.target_lang,
                 'model_path': self.model_path,
                 'n_gpu_layers': self.n_gpu_layers,
+                'stop_event': self.stop_event,
+                'update_progress': self.update_progress
             }
-            self.glossary_data = generate_glossary(args)
             
-            # 重新加载数据到表格
-            self.load_data()
+            glossary_data = generate_glossary(args)
+            if glossary_data is not None and len(glossary_data) > 0:
+                self.glossary_data = glossary_data
+                
+                # 重新加载数据到表格
+                self.load_data()
+                
+                # 更新状态
+                self.has_changes = True
+                self.update_stats()
+                self.update_save_status(True)
+                self.progress_var.set(localization.get("completed"))
             
-            # # 更新状态
-            # self.has_changes = True
-            # self.update_stats()
-            # self.update_save_status(True)
             
         except Exception as e:
             messagebox.showerror("智能填充失败", f"❌ 智能填充过程中发生错误：\n\n{str(e)}")
@@ -644,12 +714,12 @@ class GlossaryDialog(ctk.CTkToplevel):
             self.update_save_status(False)
             
             # 显示保存成功消息
-            messagebox.showinfo(
-                "保存成功", 
-                f"✅ 术语表保存成功！\n\n"
-                f"📊 有效术语: {len(self.glossary_data)} 个\n"
-                f"💡 术语表将自动应用到翻译过程中"
-            )
+            # messagebox.showinfo(
+            #     "保存成功", 
+            #     f"✅ 术语表保存成功！\n\n"
+            #     f"📊 有效术语: {len(self.glossary_data)} 个\n"
+            #     f"💡 术语表将自动应用到翻译过程中"
+            # )
             self.destroy()
             
         except Exception as e:
@@ -657,6 +727,21 @@ class GlossaryDialog(ctk.CTkToplevel):
     
     def on_close(self):
         """关闭对话框"""
+        if self.process_thread and self.process_thread.is_alive():
+            result = messagebox.askokcancel(
+                    "智能填充仍在进行中",
+                    "⚠️ 智能填充仍在进行中，是否要取消？"
+                )
+            if result:
+                self.stop_event.set()
+                self.progress_var.set(localization.get("stopped"))
+                self.progress_bar.stop()
+            else:
+                return
+            
+            self.process_thread.join()
+            self.process_thread = None
+            
         if self.has_changes:
             result = messagebox.askyesnocancel(
                 "未保存的更改", 

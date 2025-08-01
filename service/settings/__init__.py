@@ -16,6 +16,7 @@ DEFAULT_CONFIG = {
     "window_geometry": "750x650",
     "appearance_mode": "系统",
     "reflection_enabled": True,
+    "processing_mode": "translate",
 }
 
 # 默认配置文件路径

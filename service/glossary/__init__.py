@@ -10,6 +10,8 @@ from typing import Dict, List, Tuple, Optional
 from ..log import get_logger
 from toolz import keyfilter, pipe
 import utils
+import threading
+from service.glossary.ai_generator import generate_glossary_from_subtitle, ExtractionConfig
 
 logger = get_logger("Glossary")
 glossary: Dict[str, str] = {}
@@ -29,6 +31,23 @@ def load_glossary(filename: str):
     except Exception as e:
         logger.error(f"加载术语表失败: {e}")
         glossary = {}
+        
+def load_generated_glossary(subtitle_text: str, target_language: str, model_path: str, n_gpu_layers: int = -1, 
+                                stop_event: threading.Event = None, update_progress=None):
+    """从字幕文本加载生成的术语表"""
+    global glossary
+    try:
+        generated_glossary = generate_from_subtitle_text(
+            subtitle_text,
+            target_language,
+            model_path,
+            n_gpu_layers=n_gpu_layers,
+            stop_event=stop_event,
+            update_progress=update_progress
+        )
+        glossary = generated_glossary
+    except Exception as e:
+        logger.error(f"生成术语表失败: {e}")
 
 def save_glossary(filename:str):
     """保存术语表"""
@@ -105,12 +124,11 @@ def is_empty() -> bool:
     global glossary
     return len(glossary) == 0
 
-def generate_from_subtitle_text(subtitle_text: str, target_language: str, model_path: str, n_gpu_layers: int = -1) -> Dict[str, str]:
+def generate_from_subtitle_text(subtitle_text: str, target_language: str, model_path: str, n_gpu_layers: int = -1, 
+                                stop_event: threading.Event = None, update_progress=None) -> Dict[str, str]:
     """从字幕文本智能生成术语表"""
     try:
-        from service.glossary.ai_generator import generate_glossary_from_subtitle, ExtractionConfig
-        
-        # 🔥 简化调用，不需要传入翻译函数
+        # 简化调用，不需要传入翻译函数
         config = ExtractionConfig(
             chunk_size=1000,          # 每片段2000字符
             min_term_frequency=2,     # 最少出现2次
@@ -119,13 +137,15 @@ def generate_from_subtitle_text(subtitle_text: str, target_language: str, model_
             max_term_length=50        # 最大长度50个字符
         )
         
-        # 🔥 直接调用，内部处理翻译
+        # 直接调用，内部处理翻译
         generated_glossary = generate_glossary_from_subtitle(
             subtitle_text, 
             target_language, 
             model_path,
+            config=config,
+            stop_event=stop_event,
             n_gpu_layers=n_gpu_layers,
-            config=config
+            update_progress=update_progress
         )
         
         logger.info(f"从字幕文本生成术语表完成，共 {len(generated_glossary)} 个术语")

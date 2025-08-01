@@ -103,7 +103,7 @@
     "log_extracting_subtitles": "Extracting subtitles...",
     "log_translating_subtitles": "Translating subtitles...",
     "glossary_management": "Glossary Management",
-    "glossary_dialog_tips": "If no glossary is provided, a glossary will be intelligently generated during translation to ensure consistency of translated terms.",
+    "glossary_dialog_tips": "Glossary will be automatically applied during translation. If not provided, a glossary will be intelligently generated during translation to ensure consistency of translated terms.",
     "glossary_count": "Glossary Count: {count}",
     "glossary_dialog_edit_tips": "Double-click to edit | Supports shortcuts",
     "add_term": "Add",
@@ -118,6 +118,11 @@
     "save": "Save",
     "edit_term": "Edit Term",
     "glossary_updated": "Glossary Updated",
-    "log_no_glossary": "No glossary provided!",
-    "log_glossary_found": "Glossary detected, applying glossary for translation..."
+    "log_no_glossary": "No glossary provided! An automatically generated glossary will be applied.",
+    "log_glossary_found": "Glossary detected, applying glossary for translation...",
+    "log_glossary_text_split": "Text has been split into {count} segments...",
+    "log_glossary_chunk_complete": "Chunk {chunk_index}/{chunk_count} processed, extracted {term_count} terms",
+    "log_term_frequencies_complete": "Term frequency statistics complete...",
+    "log_glossary_filter_terms": "Filtered {count} terms...",
+    "log_glossary_batch_complete": "Batch {batch_index}/{batch_count} term translation complete"
 }

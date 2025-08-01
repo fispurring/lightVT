@@ -3,12 +3,14 @@
 import json
 import re
 import math
-from typing import Dict, List, Set, Tuple, Optional
+import threading
+from typing import Dict, List, Set, Tuple, Optional, Callable
 from dataclasses import dataclass
-from service import log
+from service import log,localization
 from llama_cpp import Llama
 
 logger = log.get_logger("AIGlossaryGenerator")
+_progress_var = 0.0
 
 @dataclass
 class ExtractionConfig:
@@ -40,10 +42,13 @@ def generate_glossary_from_subtitle(
     subtitle_text: str, 
     target_language: str,
     model_path: str,
+    config: Optional[ExtractionConfig],
+    stop_event: Optional[threading.Event],
     n_gpu_layers: int = -1,
-    config: Optional[ExtractionConfig] = None
+    update_progress: Callable[[str, float], None] = None
 ) -> Dict[str, str]:
     """🔥 从字幕文本生成术语表 - 主函数（移除外部翻译函数参数）"""
+    global _progress_var
     
     if not config:
         config = ExtractionConfig()
@@ -51,10 +56,36 @@ def generate_glossary_from_subtitle(
     logger.info("开始从字幕文本生成术语表")
     
     try:
+        def add_progress(msg:str,increment: float):
+            global _progress_var
+            if update_progress:
+                _progress_var += increment
+                update_progress(msg, _progress_var)
+                
+        def set_progress(msg: str, value: float):
+            global _progress_var
+            if update_progress:
+                _progress_var = value
+                update_progress(msg, _progress_var)
+
+        if stop_event.is_set():
+            logger.info("生成术语表已被取消")
+            return {}
+        
+        set_progress('', 0.0)
+
         # 步骤1: 预处理和切片
         cleaned_text = clean_subtitle_text(subtitle_text)
         chunks = split_text_into_chunks(cleaned_text, config)
+        if not chunks:
+            logger.warning("未提取到有效文本片段")
+            return {}
         logger.info(f"文本已切分为 {len(chunks)} 个片段")
+        add_progress(localization.get("log_glossary_text_split").format(count=len(chunks)), 0.1)
+
+        if stop_event.is_set():
+            logger.info("生成术语表已被取消")
+            return {}
         
         llm = Llama(
             model_path=model_path,
@@ -62,26 +93,30 @@ def generate_glossary_from_subtitle(
             n_ctx=4096
         )
         # 步骤2: 从每个切片提取术语（包含上下文）
-        term_contexts = extract_terms_with_context(chunks, llm, config)
+        term_contexts = extract_terms_with_context(chunks, llm, config, stop_event, add_progress)
         logger.info(f"提取到 {len(term_contexts)} 个带上下文的术语")
         logger.info(f"术语及上下文: {term_contexts}")
         
         # 步骤3: 统计术语频率
         term_frequencies = calculate_term_frequencies(term_contexts, cleaned_text)
-        logger.info(f"术语频率：{term_frequencies}")
+        add_progress(localization.get("log_glossary_term_frequency_complete"), 0.05)
+        logger.info(f"术语频率表：{term_frequencies}")
 
         # 步骤4: 过滤高频率术语
         high_freq_terms = filter_high_frequency_terms(term_frequencies, config)
-        logger.info(f"筛选出 {len(high_freq_terms)} 个高频率术语")
+        add_progress(localization.get("log_glossary_filter_terms").format(count=len(high_freq_terms)), 0.05)
 
         if not high_freq_terms:
             logger.warning("未提取到有效术语")
             return {}
         
         # 步骤5: 带上下文的术语翻译
-        glossary = translate_terms_with_context(high_freq_terms, term_contexts, target_language, llm)
+        glossary = translate_terms_with_context(high_freq_terms, term_contexts, target_language, llm, stop_event, add_progress)
 
         logger.info(f"术语表生成完成，共 {len(glossary)} 个术语对")
+        
+        set_progress(localization.get('completed'), 1.0)
+        
         return glossary
         
     except Exception as e:
@@ -147,13 +182,25 @@ def split_text_into_chunks(text: str, config: ExtractionConfig) -> List[str]:
 def extract_terms_with_context(
     chunks: List[str], 
     llm: Llama,
-    config: ExtractionConfig
+    config: ExtractionConfig,
+    stop_event: threading.Event,
+    add_progress: Callable
 ) -> Dict[str, List[str]]:
     """🔥 从文本片段提取术语及其上下文（移除外部翻译函数参数）"""
+    global _progress_var
+    if chunks is None or len(chunks) == 0:
+        logger.warning("没有可处理的文本片段")
+        return {}
     
     term_contexts: Dict[str, List[str]] = {}  # 术语 -> 上下文列表
     
+    progress_step = 0.5 / len(chunks)
+    
     for i, chunk in enumerate(chunks):
+        if stop_event.is_set():
+            logger.info("术语提取已被取消")
+            return {}
+        
         logger.info(f"正在处理第 {i+1}/{len(chunks)} 个片段...")
         
         try:
@@ -170,9 +217,10 @@ def extract_terms_with_context(
                 if context and context not in term_contexts[term]:
                     term_contexts[term].append(context)
             
-            logger.info(f"片段 {i+1} 处理完成，提取到 {len(chunk_terms)} 个术语")
             logger.debug(f"提取到的术语: {chunk_terms}")
-                    
+
+            add_progress(localization.get("log_glossary_chunk_complete").format(chunk_index=i+1, chunk_count=len(chunks), term_count=len(chunk_terms)), progress_step)
+
         except Exception as e:
             logger.error(f"处理片段 {i+1} 失败: {e}")
             continue
@@ -388,19 +436,29 @@ def translate_terms_with_context(
     terms: List[str], 
     term_contexts: Dict[str, List[str]], 
     target_language: str,
-    llm: Llama
+    llm: Llama,
+    stop_event: threading.Event,
+    add_progress: Callable
 ) -> Dict[str, str]:
     """🔥 带上下文的术语翻译（使用内部翻译函数）"""
-    
+    global _progress_var
     glossary = {}
-    batch_size = 10  # 减少批次大小，提供更多上下文空间
+    batch_size = 10  
+    progress_step = 0.3 / math.ceil(len(terms) / batch_size)
+    batch_count = len(terms) // batch_size + 1
     
     for i in range(0, len(terms), batch_size):
+        if stop_event.is_set():
+            logger.info("术语翻译已被取消")
+            return {}
+        
         batch_terms = terms[i:i + batch_size]
+        batch_index = i // batch_size + 1
         
         try:
-            logger.info(f"正在翻译第 {i//batch_size + 1} 批术语（{len(batch_terms)} 个）")
-            
+           
+            logger.info(f"正在翻译第 {batch_index} 批术语（{len(batch_terms)} 个）")
+
             # 构建带上下文的翻译提示
             prompt = build_context_aware_translation_prompt(
                 batch_terms, term_contexts, target_language
@@ -414,11 +472,11 @@ def translate_terms_with_context(
             for source, target in batch_glossary.items():
                 if source not in glossary and target.strip():
                     glossary[source] = target.strip()
-            
-            logger.info(f"第 {i//batch_size + 1} 批翻译完成")
-            
+
+            add_progress(localization.get("log_glossary_batch_complete").format(batch_index=batch_index,batch_count=batch_count, chunk_count=batch_count), progress_step)
+
         except Exception as e:
-            logger.error(f"第 {i//batch_size + 1} 批术语翻译失败: {e}")
+            logger.error(f"第 {batch_index} 批术语翻译失败: {e}")
             continue
     
     return glossary

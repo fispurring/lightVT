@@ -424,7 +424,7 @@ class LightVTGUI:
                 settings.set_appearance_mode(self.appearance_mode)
             
             # 保存处理模式设置
-            processing_mode_v2k = localization.get("processing_mode_k2v")
+            processing_mode_v2k = localization.get("processing_mode_v2k")
             if hasattr(self, 'processing_mode_var'):
                 settings.set_processing_mode(processing_mode_v2k[self.processing_mode_var.get()])
             
@@ -489,8 +489,10 @@ class LightVTGUI:
             self.output_var.set(filename)
             settings.set_output_path(filename)
     
-    def log_message(self, message):
+    def log_message(self, message, progress_var=None):
         """添加消息到日志"""
+        if message is None or message.strip() == "":
+            return
         self.message_queue.put(message)
     
     def process_queue(self):
