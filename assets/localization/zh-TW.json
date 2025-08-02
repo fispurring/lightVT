@@ -97,7 +97,7 @@
     "log_translating_chunk": "正在翻譯塊 {chunk_index}/{total_chunks}",
     "log_reflection_improvement": "正在進行翻譯反思和改進...",
     "log_reflection_disabled": "反思功能已禁用，跳過翻譯改進",
-    "log_translation_complete": "翻譯完成，已保存到: {output_path}",
+    "log_translation_completed": "翻譯完成，已保存到: {output_path}",
     "log_translation_error": "翻譯過程中發生錯誤: {error_message}\n{traceback}",
     "log_extracting_and_translating_subtitles": "提取並翻譯字幕中...",
     "log_extracting_subtitles": "提取字幕中...",
@@ -124,5 +124,7 @@
     "log_glossary_chunk_complete": "片段 {chunk_index}/{chunk_count} 處理完成，提取到 {term_count} 個術語",
     "log_term_frequencies_complete": "術語頻率統計完成...",
     "log_glossary_filter_terms": "篩選出 {count} 個術語...",
-    "log_glossary_batch_complete": "第 {batch_index}/{batch_count} 批術語翻譯完成"
+    "log_glossary_batch_complete": "第 {batch_index}/{batch_count} 批術語翻譯完成",
+    "error_input_file_empty": "錯誤：文件路徑不能為空",
+    "error_model_path_empty": "錯誤：模型文件路徑不能為空"
 }

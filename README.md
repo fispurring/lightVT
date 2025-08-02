@@ -97,7 +97,7 @@ Recommended models:
 - [x] ✅ AI translation integration
 - [x] ✅ GPU acceleration support
 - [x] ✅ Graphical user interface
-- [ ] 🔄 Smart terminology
+- [x] ✅ Smart glossary
 - [ ] 🔄 Cloud model support
 - [ ] 🔄 Bilingual subtitle output
 
@@ -204,7 +204,7 @@ Recommended models:
 - [x] ✅ AI 翻译集成
 - [x] ✅ GPU 加速支持
 - [x] ✅ 图形用户界面
-- [ ] 🔄 智能术语表
+- [x] ✅ 智能术语表
 - [ ] 🔄 云端模型支持
 - [ ] 🔄 输出双语字幕
 

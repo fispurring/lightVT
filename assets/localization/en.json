@@ -97,7 +97,7 @@
     "log_translating_chunk": "Translating chunk {chunk_index}/{total_chunks}",
     "log_reflection_improvement": "Performing translation reflection and improvement...",
     "log_reflection_disabled": "Reflection feature is disabled, skipping translation improvement",
-    "log_translation_complete": "Translation complete, saved to: {output_path}",
+    "log_translation_completed": "Translation complete, saved to: {output_path}",
     "log_translation_error": "An error occurred during translation: {error_message}\n{traceback}",
     "log_extracting_and_translating_subtitles": "Extracting and translating subtitles...",
     "log_extracting_subtitles": "Extracting subtitles...",
@@ -124,5 +124,7 @@
     "log_glossary_chunk_complete": "Chunk {chunk_index}/{chunk_count} processed, extracted {term_count} terms",
     "log_term_frequencies_complete": "Term frequency statistics complete...",
     "log_glossary_filter_terms": "Filtered {count} terms...",
-    "log_glossary_batch_complete": "Batch {batch_index}/{batch_count} term translation complete"
+    "log_glossary_batch_complete": "Batch {batch_index}/{batch_count} term translation complete",
+    "error_input_file_empty": "Error: Input file path cannot be empty",
+    "error_model_path_empty": "Error: Model file path cannot be empty"
 }

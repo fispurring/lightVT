@@ -11,6 +11,8 @@ import sys
 if getattr(sys, 'frozen', False):
     # 如果是打包环境，切换到资源目录
     os.chdir(os.path.dirname(sys.executable))
+    # 添加自带ffmpeg目录到 PATH
+    os.environ["PATH"] += os.pathsep + f"{sys._MEIPASS}/bin"
     # 添加 ffprobe 所在目录到 PATH
     os.environ["PATH"] += os.pathsep + "/usr/local/bin" + os.pathsep + "/opt/homebrew/bin"
     

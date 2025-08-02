@@ -14,6 +14,15 @@ def generate_glossary(args):
     n_gpu_layers = args.get('n_gpu_layers', -1)
     stop_event = args.get('stop_event')
     update_progress = args.get('update_progress', None)
+
+    if not input_file:
+        update_progress(localization.get('error_input_file_empty'), 0)
+        return
+
+    if not model_path:
+        update_progress(localization.get('error_model_path_empty'), 0)
+        return
+    
     if input_file.endswith('.srt'):
         # 如果是SRT文件，直接使用现有的生成逻辑
         with open(input_file, 'r', encoding='utf-8') as f:

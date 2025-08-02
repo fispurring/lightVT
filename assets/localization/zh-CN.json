@@ -97,7 +97,7 @@
     "log_translating_chunk": "正在翻译块 {chunk_index}/{total_chunks}",
     "log_reflection_improvement": "正在进行翻译反思和改进...",
     "log_reflection_disabled": "反思功能已禁用，跳过翻译改进",
-    "log_translation_complete": "翻译完成，已保存到: {output_path}",
+    "log_translation_completed": "翻译完成，已保存到: {output_path}",
     "log_translation_error": "翻译过程中发生错误: {error_message}\n{traceback}",
     "log_extracting_and_translating_subtitles": "提取并翻译字幕中...",
     "log_extracting_subtitles": "提取字幕中...",
@@ -124,5 +124,7 @@
     "log_glossary_chunk_complete": "片段 {chunk_index}/{chunk_count} 处理完成，提取到 {term_count} 个术语",
     "log_term_frequencies_complete": "统计术语频率完成...",
     "log_glossary_filter_terms": "筛选出 {count} 个术语...",
-    "log_glossary_batch_complete": "第 {batch_index}/{batch_count} 批术语翻译完成"
+    "log_glossary_batch_complete": "第 {batch_index}/{batch_count} 批术语翻译完成",
+    "error_input_file_empty": "错误：文件路径不能为空",
+    "error_model_path_empty": "错误：模型文件路径不能为空"
 }
