@@ -99,7 +99,7 @@ def generate_glossary_from_subtitle(
         
         # 步骤3: 统计术语频率
         term_frequencies = calculate_term_frequencies(term_contexts, cleaned_text)
-        add_progress(localization.get("log_glossary_term_frequency_complete"), 0.05)
+        add_progress(localization.get("log_glossary_term_frequency_completed"), 0.05)
         logger.info(f"术语频率表：{term_frequencies}")
 
         # 步骤4: 过滤高频率术语
