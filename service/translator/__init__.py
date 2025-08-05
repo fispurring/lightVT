@@ -3,6 +3,7 @@ import time
 from pathlib import Path
 from typing import Dict, List, Callable, Any, Optional, Tuple, Any
 import traceback
+import utils
 from service.log import get_logger
 from . import prompt
 from . import llm_helper
@@ -120,8 +121,7 @@ def translate_srt_file(
     
     # 读取输入文件
     log_fn(f"{localization.get('log_reading_subtitle_file')} {input_path}")
-    with open(input_path, 'r', encoding='utf-8') as f:
-        content = f.read()
+    content = utils.safe_read_file(input_path)
     
     return translate_srt_text(
         input_text=content,

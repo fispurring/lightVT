@@ -5,6 +5,7 @@ from service.translator import translate_srt_text
 from defs import FileType, get_supported_subtitle_types, get_supported_video_types
 from service import localization
 from service import glossary
+import utils
     
 def generate_glossary(args):
     """生成术语表"""
@@ -25,8 +26,7 @@ def generate_glossary(args):
     
     if input_file.endswith('.srt'):
         # 如果是SRT文件，直接使用现有的生成逻辑
-        with open(input_file, 'r', encoding='utf-8') as f:
-            subtitles_text = f.read()
+        subtitles_text = utils.safe_read_file(input_file)
 
         return glossary.generate_from_subtitle_text(subtitles_text, 
                                                     target_lang, 

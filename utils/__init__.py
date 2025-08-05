@@ -4,6 +4,7 @@ from pathlib import Path
 import pynvml
 import base64
 from defs import FileType, get_supported_subtitle_types, get_supported_video_types
+import chardet
 
 def get_gpu_info():
     """获取GPU信息"""
@@ -117,3 +118,18 @@ def get_file_type(file_path):
         return FileType.VIDEO
     else:
         raise ValueError("不支持的文件类型")
+    
+def safe_read_file(file_path) -> str:
+    """自动检测编码并读取文件"""
+    # 先检测编码
+    with open(file_path, 'rb') as f:
+        raw_data = f.read()
+        result = chardet.detect(raw_data)
+        encoding = result['encoding']
+        confidence = result['confidence']
+    
+    print(f"检测到编码: {encoding}, 置信度: {confidence:.2f}")
+    
+    # 使用检测到的编码读取
+    with open(file_path, 'r', encoding=encoding) as f:
+        return f.read()
