@@ -126,5 +126,6 @@
     "log_glossary_filter_terms": "篩選出 {count} 個術語...",
     "log_glossary_batch_complete": "第 {batch_index}/{batch_count} 批術語翻譯完成",
     "error_input_file_empty": "錯誤：文件路徑不能為空",
-    "error_model_path_empty": "錯誤：模型文件路徑不能為空"
+    "error_model_path_empty": "錯誤：模型文件路徑不能為空",
+    "log_glossary_term_frequency_completed": "術語頻率統計完成..."
 }

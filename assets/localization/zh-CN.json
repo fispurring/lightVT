@@ -126,5 +126,6 @@
     "log_glossary_filter_terms": "筛选出 {count} 个术语...",
     "log_glossary_batch_complete": "第 {batch_index}/{batch_count} 批术语翻译完成",
     "error_input_file_empty": "错误：文件路径不能为空",
-    "error_model_path_empty": "错误：模型文件路径不能为空"
+    "error_model_path_empty": "错误：模型文件路径不能为空",
+    "log_glossary_term_frequency_completed": "术语频率统计完成..."
 }

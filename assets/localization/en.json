@@ -126,5 +126,6 @@
     "log_glossary_filter_terms": "Filtered {count} terms...",
     "log_glossary_batch_complete": "Batch {batch_index}/{batch_count} term translation complete",
     "error_input_file_empty": "Error: Input file path cannot be empty",
-    "error_model_path_empty": "Error: Model file path cannot be empty"
+    "error_model_path_empty": "Error: Model file path cannot be empty",
+    "log_glossary_term_frequency_completed": "Term frequency statistics completed..."
 }
