@@ -31,8 +31,8 @@ def extract_subtitles(input_file):
             # 提取字幕到临时文件
             stream = ffmpeg.input(input_file)
             stream = ffmpeg.output(stream, temp_file_path, 
-                                   map=f"0:{subtitle_stream['index']}", 
-                                   c='srt')
+                                map=f"0:{subtitle_stream['index']}", 
+                                c='srt')
             ffmpeg.run(stream, overwrite_output=True)
             
             # 读取临时文件内容
