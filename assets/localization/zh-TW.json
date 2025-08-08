@@ -113,8 +113,8 @@
     "source_term": "原文術語",
     "target_term": "譯文術語",
     "term_count": "術語數量: {count}",
-    "import_glossary": "導入",
-    "export_glossary": "導出",
+    "import": "導入",
+    "export": "導出",
     "save": "保存",
     "edit_term": "編輯術語",
     "glossary_updated": "術語表已更新",
@@ -127,5 +127,14 @@
     "log_glossary_batch_complete": "第 {batch_index}/{batch_count} 批術語翻譯完成",
     "error_input_file_empty": "錯誤：文件路徑不能為空",
     "error_model_path_empty": "錯誤：模型文件路徑不能為空",
-    "log_glossary_term_frequency_completed": "術語頻率統計完成..."
+    "log_glossary_term_frequency_completed": "術語頻率統計完成...",
+    "unsaved_changes": "未保存的更改",
+    "unsaved_changes_tips": "⚠️ 術語表有未保存的更改\n\n是否保存後關閉？",
+    "smart_fill_processing":"智能填充仍在進行中",
+    "smart_fill_processing_tips":"⚠️ 智能填充仍在進行中，是否要取消？",
+    "import_glossary": "導入術語表",
+    "import_glossary_tips":"檢測到已有 {glossary_count} 個術語\n\n即將導入 {imported_count} 個新術語\n\n選擇導入方式：\n• 是 - 合併到現有術語\n• 否 - 替換所有術語\n• 取消 - 取消導入",
+    "export_glossary": "導出術語表",
+    "export_glossary_success": "導出成功",
+    "export_glossary_success_tips": "術語表導出成功！\n\n📁 文件位置: {filename}\n📊 導出術語: {glossary_count} 個"
 }

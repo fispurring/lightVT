@@ -113,8 +113,8 @@
     "source_term": "原文术语",
     "target_term": "译文术语",
     "term_count": "术语数量: {count}",
-    "import_glossary": "导入",
-    "export_glossary": "导出",
+    "import": "导入",
+    "export": "导出",
     "save": "保存",
     "edit_term": "编辑术语",
     "glossary_updated": "术语表已更新",
@@ -127,5 +127,14 @@
     "log_glossary_batch_complete": "第 {batch_index}/{batch_count} 批术语翻译完成",
     "error_input_file_empty": "错误：文件路径不能为空",
     "error_model_path_empty": "错误：模型文件路径不能为空",
-    "log_glossary_term_frequency_completed": "术语频率统计完成..."
+    "log_glossary_term_frequency_completed": "术语频率统计完成...",
+    "unsaved_changes": "未保存的更改",
+    "unsaved_changes_tips": "⚠️ 术语表有未保存的更改\n\n是否保存后关闭？",
+    "smart_fill_processing":"智能填充仍在进行中",
+    "smart_fill_processing_tips":"⚠️ 智能填充仍在进行中，是否要取消？",
+    "import_glossary": "导入术语表",
+    "import_glossary_tips":"检测到已有 {glossary_count} 术语\n\n即将导入 {imported_count} 个新术语\n\n选择导入方式：\n• 是 - 合并到现有术语\n• 否 - 替换所有术语\n• 取消 - 取消导入",
+    "export_glossary": "导出术语表",
+    "export_glossary_success": "导出成功",
+    "export_glossary_success_tips": "术语表导出成功！\n\n📁 文件位置: {filename}\n📊 导出术语: {glossary_count} 个"
 }

@@ -60,10 +60,30 @@ class GlossaryDialog(ctk.CTkToplevel):
         self.process_queue()
     
     def center_window(self):
-        """窗口居中"""
+        """相对于父窗口居中"""
         self.update_idletasks()
-        x = (self.winfo_screenwidth() // 2) - (self.winfo_width() // 2)
-        y = (self.winfo_screenheight() // 2) - (self.winfo_height() // 2)
+        
+        # 获取父窗口位置和大小
+        parent_x = self.master.winfo_x()
+        parent_y = self.master.winfo_y()
+        parent_width = self.master.winfo_width()
+        parent_height = self.master.winfo_height()
+        
+        # 获取当前窗口大小
+        dialog_width = self.winfo_width()
+        dialog_height = self.winfo_height()
+        
+        # 计算居中位置
+        x = parent_x + (parent_width - dialog_width) // 2
+        y = parent_y + (parent_height - dialog_height) // 2
+        
+        # 确保窗口不会超出屏幕边界
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        
+        x = max(0, min(x, screen_width - dialog_width))
+        y = max(0, min(y, screen_height - dialog_height))
+        
         self.geometry(f"+{x}+{y}")
     
     def create_widgets(self):
@@ -202,7 +222,7 @@ class GlossaryDialog(ctk.CTkToplevel):
         # 导入按钮
         import_button = ctk.CTkButton(
             toolbar_frame,
-            text=f"📥 {localization.get('import_glossary')}",
+            text=f"📥 {localization.get('import')}",
             command=self.import_glossary,
             width=70,   # 🔥 增加宽度以容纳文字
             height=32,
@@ -215,7 +235,7 @@ class GlossaryDialog(ctk.CTkToplevel):
         # 导出按钮
         export_button = ctk.CTkButton(
             toolbar_frame,
-            text=f"📤 {localization.get('export_glossary')}",
+            text=f"📤 {localization.get('export')}",
             command=self.export_glossary,
             width=70,   # 🔥 增加宽度以容纳文字
             height=32,
@@ -587,7 +607,7 @@ class GlossaryDialog(ctk.CTkToplevel):
         """导入术语表"""
         from tkinter import filedialog
         filename = filedialog.askopenfilename(
-            title="导入术语表",
+            title= localization.get("import_glossary"),
             filetypes=[("CSV文件", "*.csv")]
         )
         
@@ -622,13 +642,11 @@ class GlossaryDialog(ctk.CTkToplevel):
                     # 询问是否替换现有数据
                     if self.glossary_data:
                         choice = messagebox.askyesnocancel(
-                            "导入选择",
-                            f"检测到已有 {len(self.glossary_data)} 个术语\n\n"
-                            f"即将导入 {imported_count} 个新术语\n\n"
-                            "选择导入方式：\n"
-                            "• 是 - 合并到现有术语\n"
-                            "• 否 - 替换所有术语\n"
-                            "• 取消 - 取消导入"
+                            localization.get("import_glossary"),
+                            localization.get("import_glossary_tips").format(
+                                glossary_count=len(self.glossary_data),
+                                imported_count=imported_count
+                            )
                         )
                         if choice is None:  # 取消
                             return
@@ -673,7 +691,7 @@ class GlossaryDialog(ctk.CTkToplevel):
             return
         
         filename = filedialog.asksaveasfilename(
-            title="导出术语表",
+            title=localization.get("export_glossary"),
             defaultextension=".json",
             filetypes=[
                 ("CSV文件", "*.csv"), 
@@ -691,10 +709,11 @@ class GlossaryDialog(ctk.CTkToplevel):
                             writer.writerow([source, target])
                 
                 messagebox.showinfo(
-                    "导出成功", 
-                    f"术语表导出成功！\n\n"
-                    f"📁 文件位置: {filename}\n"
-                    f"📊 导出术语: {len(self.glossary_data)} 个"
+                    localization.get("export_glossary_success"), 
+                    localization.get("export_glossary_success_tips").format(
+                        filename=filename,
+                        glossary_count=len(self.glossary_data)
+                    )
                 )
                 
             except Exception as e:
@@ -729,9 +748,9 @@ class GlossaryDialog(ctk.CTkToplevel):
         """关闭对话框"""
         if self.process_thread and self.process_thread.is_alive():
             result = messagebox.askokcancel(
-                    "智能填充仍在进行中",
-                    "⚠️ 智能填充仍在进行中，是否要取消？"
-                )
+                localization.get("smart_fill_processing"),
+                localization.get("smart_fill_processing_tips")
+            )
             if result:
                 self.stop_event.set()
                 self.progress_var.set(localization.get("stopped"))
@@ -744,8 +763,8 @@ class GlossaryDialog(ctk.CTkToplevel):
             
         if self.has_changes:
             result = messagebox.askyesnocancel(
-                "未保存的更改", 
-                "⚠️ 术语表有未保存的更改\n\n是否保存后关闭？"
+                localization.get("unsaved_changes"),
+                localization.get("unsaved_changes_tips")
             )
             if result is True:  # 保存
                 self.save_glossary()

@@ -113,8 +113,8 @@
     "source_term": "Source Term",
     "target_term": "Target Term",
     "term_count": "Term Count",
-    "import_glossary": "Import",
-    "export_glossary": "Export",
+    "import": "Import",
+    "export": "Export",
     "save": "Save",
     "edit_term": "Edit Term",
     "glossary_updated": "Glossary Updated",
@@ -127,5 +127,14 @@
     "log_glossary_batch_complete": "Batch {batch_index}/{batch_count} term translation complete",
     "error_input_file_empty": "Error: Input file path cannot be empty",
     "error_model_path_empty": "Error: Model file path cannot be empty",
-    "log_glossary_term_frequency_completed": "Term frequency statistics completed..."
+    "log_glossary_term_frequency_completed": "Term frequency statistics completed...",
+    "unsaved_changes": "Unsaved Changes",
+    "unsaved_changes_tips": "⚠️ The glossary has unsaved changes\n\nDo you want to save before closing?",
+    "smart_fill_processing":"Smart Fill is still in progress",
+    "smart_fill_processing_tips":"⚠️ Smart Fill is still in progress, do you want to cancel?",
+    "import_glossary": "Import Glossary",
+    "import_glossary_tips":"Detected {glossary_count} existing terms\n\nAbout to import {imported_count} new terms\n\nSelect import method:\n• Yes - Merge with existing terms\n• No - Replace all terms\n• Cancel - Cancel import",
+    "export_glossary": "Export Glossary",
+    "export_glossary_success": "Export Successful",
+    "export_glossary_success_tips": "Glossary exported successfully!\n\n📁 File Location: {filename}\n📊 Exported Terms: {glossary_count} terms"
 }
