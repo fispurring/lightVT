@@ -13,13 +13,14 @@ from service.log import get_logger
 from interface import generate_glossary
 import threading
 import queue
+from typing import Callable
 
 logger = get_logger("GlossaryDialog")
 
 class GlossaryDialog(ctk.CTkToplevel):
     """术语表编辑对话框 - tksheet 版本"""
     
-    def __init__(self, parent, filename: str, input_path:str, model_path: str, target_lang: str,n_gpu_layers: int = -1):
+    def __init__(self, parent, filename: str, input_path:str, model_path: str, target_lang: str,n_gpu_layers: int = -1, parent_log_message:Callable=None):
         super().__init__(parent)
         
         self.filename = filename
@@ -27,7 +28,8 @@ class GlossaryDialog(ctk.CTkToplevel):
         self.model_path = model_path
         self.target_lang = target_lang
         self.n_gpu_layers = n_gpu_layers
-        
+        self.parent_log_message = parent_log_message
+
         self.message_queue = queue.Queue()
 
         self.title(localization.get("glossary_management"))
@@ -733,12 +735,7 @@ class GlossaryDialog(ctk.CTkToplevel):
             self.update_save_status(False)
             
             # 显示保存成功消息
-            # messagebox.showinfo(
-            #     "保存成功", 
-            #     f"✅ 术语表保存成功！\n\n"
-            #     f"📊 有效术语: {len(self.glossary_data)} 个\n"
-            #     f"💡 术语表将自动应用到翻译过程中"
-            # )
+            self.parent_log_message(localization.get("glossary_updated"))
             self.destroy()
             
         except Exception as e:

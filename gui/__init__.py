@@ -344,11 +344,10 @@ class LightVTGUI:
                                 filename=self.input_var.get(),
                                 input_path=self.input_var.get(),
                                 model_path=self.model_var.get(),
-                                target_lang=self.target_lang_var.get())
+                                target_lang=self.target_lang_var.get(),
+                                parent_log_message=self.log_message
+                            )
         self.root.wait_window(dialog)
-        
-        # 术语表更新后的处理
-        # self.log_message("glossary_updated")
         
     def set_language(self, lang: str):
         """切换语言"""
