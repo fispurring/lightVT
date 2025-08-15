@@ -48,11 +48,24 @@ Recommended models:
 - Recommended configuration: Gemma3-12B and above performance models (suitable for 12GB+ VRAM)
 
 ## 📺 Demo
-
+### Video
 <div align="left">
-  <img src="docs/img01.png" alt="Main Interface" width="360">
-  <img src="docs/img02.png" alt="Advanced Settings" width="360">
-  <img src="docs/img03.png" alt="Translation in Progress" width="360">
+  <div style="position: relative; width: 100%; max-width: 640px; padding-bottom: 36%; margin: 0 auto;">
+    <iframe 
+      src="https://www.youtube.com/embed/CK0rJsQf01A?rel=0&showinfo=0" 
+      title="LightVT Demo - AI Video Subtitle Translator"
+      style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen>
+    </iframe>
+  </div>
+</div>
+
+### Screenshots
+<div align="left">
+  <img src="docs/img01.png" alt="Main Interface" width="240">
+  <img src="docs/img02.png" alt="Advanced Settings" width="240">
+  <img src="docs/img03.png" alt="Translation in Progress" width="240">
 </div>
 
 ## 🔧 Troubleshooting
@@ -155,11 +168,24 @@ Recommended models:
 - 推荐配置：Gemma3-12B及以上性能的模型(适合12GB+显存)
 
 ## 📺 演示
-
+### 视频
 <div align="left">
-  <img src="docs/img01.png" alt="主界面" width="360">
-  <img src="docs/img02.png" alt="高级配置" width="360">
-  <img src="docs/img03.png" alt="翻译中" width="360">
+  <div style="position: relative; width: 100%; max-width: 640px; padding-bottom: 36%; margin: 0 auto;">
+    <iframe 
+      src="https://www.youtube.com/embed/CK0rJsQf01A?rel=0&showinfo=0" 
+      title="LightVT Demo - AI Video Subtitle Translator"
+      style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen>
+    </iframe>
+  </div>
+</div>
+
+### 截图
+<div align="left">
+  <img src="docs/img01.png" alt="主界面" width="240">
+  <img src="docs/img02.png" alt="高级配置" width="240">
+  <img src="docs/img03.png" alt="翻译中" width="240">
 </div>
 
 ## 🔧 常见问题
