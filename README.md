@@ -49,16 +49,13 @@ Recommended models:
 
 ## 📺 Demo
 ### Video
-<div align="left">
-  <div style="position: relative; width: 100%; max-width: 640px; padding-bottom: 36%; margin: 0 auto;">
-    <iframe 
-      src="https://www.youtube.com/embed/CK0rJsQf01A?rel=0&showinfo=0" 
-      title="LightVT Demo - AI Video Subtitle Translator"
-      style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowfullscreen>
-    </iframe>
-  </div>
+<div align="center">
+  <a href="https://youtu.be/CK0rJsQf01A" target="_blank">
+    <img src="https://img.youtube.com/vi/CK0rJsQf01A/maxresdefault.jpg" alt="LightVT Demo Video" width="640">
+    <br><br>
+    <strong>🎬 Click to watch LightVT demo video</strong>
+    <br>
+  </a>
 </div>
 
 ### Screenshots
@@ -169,16 +166,13 @@ Recommended models:
 
 ## 📺 演示
 ### 视频
-<div align="left">
-  <div style="position: relative; width: 100%; max-width: 640px; padding-bottom: 36%; margin: 0 auto;">
-    <iframe 
-      src="https://www.youtube.com/embed/CK0rJsQf01A?rel=0&showinfo=0" 
-      title="LightVT Demo - AI Video Subtitle Translator"
-      style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowfullscreen>
-    </iframe>
-  </div>
+<div align="center">
+  <a href="https://youtu.be/CK0rJsQf01A" target="_blank">
+    <img src="https://img.youtube.com/vi/CK0rJsQf01A/maxresdefault.jpg" alt="LightVT Demo Video" width="640">
+    <br><br>
+    <strong>🎬 点击观看 LightVT 演示视频</strong>
+    <br>
+  </a>
 </div>
 
 ### 截图
