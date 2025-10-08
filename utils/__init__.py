@@ -5,6 +5,7 @@ import pynvml
 import base64
 from defs import FileType, get_supported_subtitle_types, get_supported_video_types
 import chardet
+from . import settings
 
 def get_gpu_info():
     """获取GPU信息"""

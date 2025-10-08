@@ -6,7 +6,7 @@ from tkinter import messagebox
 import traceback
 import customtkinter as ctk
 from customtkinter import filedialog
-from main import process_video_file,settings,get_logger,utils
+from main import process_video_file,get_logger,utils
 from service import localization
 from defs import FileType, get_supported_subtitle_types, get_supported_video_types
 from gui.options_dialog import OptionsDialog
@@ -85,16 +85,16 @@ class LightVTGUI:
         
         # 应用模型路径
         self.model_var.set(options['model_path'])
-        settings.set_model_path(options['model_path'])
+        utils.settings.set_model_path(options['model_path'])
         
         # 应用反思设置
         self.reflection_enabled_var.set(options['reflection_enabled'])
-        settings.set_reflection_enabled(self.reflection_enabled_var.get())
-        
+        utils.settings.set_reflection_enabled(self.reflection_enabled_var.get())
+
         # 应用GPU设置
         self.gpu_layers_var.set(options['gpu_layers'])
-        settings.set_gpu_layers(int(options['gpu_layers']))
-        
+        utils.settings.set_gpu_layers(int(options['gpu_layers']))
+
         self.log_message(localization.get("options_applied"))
         
     def create_widgets(self):
@@ -363,22 +363,22 @@ class LightVTGUI:
 
     def restore_last_settings(self):
         """恢复上次设置"""
-        self.input_var.set(settings.get_input_path())
-        self.output_var.set(settings.get_output_path())
-        self.model_var.set(settings.get_model_path())
-        
+        self.input_var.set(utils.settings.get_input_path())
+        self.output_var.set(utils.settings.get_output_path())
+        self.model_var.set(utils.settings.get_model_path())
+
         iso_to_lang = localization.get("iso_to_lang")
-        self.source_lang_var.set(iso_to_lang[settings.get_source_language()])
-        self.target_lang_var.set(iso_to_lang[settings.get_target_language()])
-        
+        self.source_lang_var.set(iso_to_lang[utils.settings.get_source_language()])
+        self.target_lang_var.set(iso_to_lang[utils.settings.get_target_language()])
+
         processing_mode_k2v = localization.get("processing_mode_k2v")
-        self.processing_mode_var.set(processing_mode_k2v[settings.get_processing_mode()])
-        
+        self.processing_mode_var.set(processing_mode_k2v[utils.settings.get_processing_mode()])
+
         # 恢复反思设置
-        self.reflection_enabled_var.set(settings.get_reflection_enabled())
-    
+        self.reflection_enabled_var.set(utils.settings.get_reflection_enabled())
+
         # 恢复GPU设置
-        gpu_layers = settings.get_gpu_layers()
+        gpu_layers = utils.settings.get_gpu_layers()
         self.gpu_layers_var.set(str(gpu_layers))
         
     def save_current_settings(self):
@@ -386,52 +386,52 @@ class LightVTGUI:
         try:
             # 保存文件路径设置
             if hasattr(self, 'input_var'):
-                settings.set_input_path(self.input_var.get())
+                utils.settings.set_input_path(self.input_var.get())
             
             if hasattr(self, 'output_var'):
-                settings.set_output_path(self.output_var.get())
-            
+                utils.settings.set_output_path(self.output_var.get())
+
             # 保存模型设置
             if hasattr(self, 'model_var'):
-                settings.set_model_path(self.model_var.get())
-            
+                utils.settings.set_model_path(self.model_var.get())
+
             lang_to_iso = localization.get("lang_to_iso")
             # 保存语言设置
             if hasattr(self, 'source_lang_var'):
                 iso_source_lang = lang_to_iso[self.source_lang_var.get()]
-                settings.set_source_language(iso_source_lang)
+                utils.settings.set_source_language(iso_source_lang)
             
             if hasattr(self, 'target_lang_var'):
                 iso_target_lang = lang_to_iso[self.target_lang_var.get()]
-                settings.set_target_language(iso_target_lang)
-            
+                utils.settings.set_target_language(iso_target_lang)
+
             # 保存界面语言设置
             if hasattr(self, 'localization'):
                 current_lang = localization.get_current_language()
-                settings.set_interface_language(current_lang)
-            
+                utils.settings.set_interface_language(current_lang)
+
             # 保存反思设置
             if hasattr(self, 'reflection_enabled'):
-                settings.set_reflection_enabled(self.reflection_enabled)
-            
+                utils.settings.set_reflection_enabled(self.reflection_enabled)
+
             # 保存GPU设置
             if hasattr(self, 'gpu_layers_var'):
                 gpu_layers = int(self.gpu_layers_var.get())
-                settings.set_gpu_layers(gpu_layers)
-            
+                utils.settings.set_gpu_layers(gpu_layers)
+
             # 保存主题设置
             if hasattr(self, 'appearance_mode'):
-                settings.set_appearance_mode(self.appearance_mode)
-            
+                utils.settings.set_appearance_mode(self.appearance_mode)
+
             # 保存处理模式设置
             processing_mode_v2k = localization.get("processing_mode_v2k")
             if hasattr(self, 'processing_mode_var'):
-                settings.set_processing_mode(processing_mode_v2k[self.processing_mode_var.get()])
+                utils.settings.set_processing_mode(processing_mode_v2k[self.processing_mode_var.get()])
             
             
             # 强制保存到文件
-            settings.save()
-            
+            utils.settings.save()
+
         except Exception as e:
             error_msg = localization.get('error_saving_settings')
             self.log_message(f"{error_msg} {str(e)}")
@@ -459,14 +459,14 @@ class LightVTGUI:
         )
         if filename:
             self.input_var.set(filename)
-            settings.set_input_path(filename)
+            utils.settings.set_input_path(filename)
             # 自动设置输出文件名
-            if not settings.get_output_path():
+            if not utils.settings.get_output_path():
                 target_lang_value = self.target_lang_var.get()
                 lang_to_iso = localization.get("lang_to_iso")
                 target_lang = lang_to_iso.get(target_lang_value, "zh-CN")
-                output_path = settings.auto_set_output_path(filename, target_lang)
-                settings.set_output_path(output_path)
+                output_path = utils.settings.auto_set_output_path(filename, target_lang)
+                utils.settings.set_output_path(output_path)
                 self.output_var.set(output_path)
                 
             # 判断文件类型并自动设置处理模式
@@ -487,7 +487,7 @@ class LightVTGUI:
         )
         if filename:
             self.output_var.set(filename)
-            settings.set_output_path(filename)
+            utils.settings.set_output_path(filename)
     
     def log_message(self, message, progress_var=None):
         """添加消息到日志"""

@@ -3,7 +3,6 @@ import sys
 from pathlib import Path
 from interface import process_video_file
 from service.log import get_logger
-import service.settings as settings
 import utils
 
 def main():
@@ -44,6 +43,5 @@ if __name__ == "__main__":
 __all__ = [
     "get_logger",
     "process_video_file",
-    "settings",
     "utils"
 ]
