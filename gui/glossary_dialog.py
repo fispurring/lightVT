@@ -19,14 +19,15 @@ logger = get_logger("GlossaryDialog")
 
 class GlossaryDialog(ctk.CTkToplevel):
     """术语表编辑对话框 - tksheet 版本"""
-    
-    def __init__(self, parent, filename: str, input_path:str, model_path: str, target_lang: str,n_gpu_layers: int = -1, parent_log_message:Callable=None):
+
+    def __init__(self, parent, filename: str, input_path:str, model_path: str, target_lang: str, processing_mode: str, n_gpu_layers: int = -1, parent_log_message:Callable=None):
         super().__init__(parent)
         
         self.filename = filename
         self.input_path = input_path
         self.model_path = model_path
         self.target_lang = target_lang
+        self.processing_mode = processing_mode
         self.n_gpu_layers = n_gpu_layers
         self.parent_log_message = parent_log_message
 
@@ -585,7 +586,8 @@ class GlossaryDialog(ctk.CTkToplevel):
                 'model_path': self.model_path,
                 'n_gpu_layers': self.n_gpu_layers,
                 'stop_event': self.stop_event,
-                'update_progress': self.update_progress
+                'update_progress': self.update_progress,
+                'processing_mode': self.processing_mode
             }
             
             glossary_data = generate_glossary(args)

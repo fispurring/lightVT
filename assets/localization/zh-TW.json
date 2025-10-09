@@ -33,6 +33,7 @@
     "all_files": "所有文件",
     "select_video_or_subtitle_file": "選擇視頻或字幕文件",
     "select_output_file": "選擇輸出文件",
+    "text_files": "文本文件",
     "video_files": "視頻文件",
     "subtitle_files": "字幕文件",
     "iso_to_lang": {
@@ -62,10 +63,12 @@
         "俄語": "ru"
     },
     "processing_mode_k2v": {
+        "translate_plain_text": "翻譯純文本",
         "translate": "翻譯字幕",
         "extract_subtitle": "僅提取字幕"
     },
     "processing_mode_v2k": {
+        "翻譯純文本": "translate_plain_text",
         "翻譯字幕": "translate",
         "僅提取字幕": "extract_subtitle"
     },
@@ -101,6 +104,7 @@
     "log_translation_error": "翻譯過程中發生錯誤: {error_message}\n{traceback}",
     "log_extracting_and_translating_subtitles": "提取並翻譯字幕中...",
     "log_extracting_subtitles": "提取字幕中...",
+    "log_translating_plain_text": "翻譯純文本中...",
     "log_translating_subtitles": "翻譯字幕中...",
     "glossary_management": "術語表管理",
     "glossary_dialog_tips": "術語表將自動應用到翻譯過程中。如果未填寫，將在翻譯過程中智能生成術語表，以確保翻譯術語的一致性。",
@@ -127,6 +131,7 @@
     "log_glossary_batch_complete": "第 {batch_index}/{batch_count} 批術語翻譯完成",
     "error_input_file_empty": "錯誤：文件路徑不能為空",
     "error_model_path_empty": "錯誤：模型文件路徑不能為空",
+    "error_processing_mode_empty": "錯誤：處理模式不能為空",
     "log_glossary_term_frequency_completed": "術語頻率統計完成...",
     "unsaved_changes": "未保存的更改",
     "unsaved_changes_tips": "⚠️ 術語表有未保存的更改\n\n是否保存後關閉？",

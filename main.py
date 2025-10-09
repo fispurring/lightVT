@@ -1,7 +1,7 @@
 import argparse
 import sys
 from pathlib import Path
-from interface import process_video_file
+from interface import process_file
 from service.log import get_logger
 import utils
 
@@ -31,7 +31,7 @@ def main():
             parser.print_help()
             return
         
-        result = process_video_file(vars(args))
+        result = process_file(vars(args))
         if result:
             print("处理完成!")
         else:
@@ -42,6 +42,6 @@ if __name__ == "__main__":
 
 __all__ = [
     "get_logger",
-    "process_video_file",
+    "process_file",
     "utils"
 ]

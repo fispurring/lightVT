@@ -65,7 +65,7 @@ def translate_text(
     log_fn(localization.get("msg_translating_text").format(characters_count=main_chunk_text_length))
     
     # 生成上下文感知的提示
-    user_prompt =prompt.generate_translation_prompt(full_context, main_indices)
+    user_prompt =prompt.subtitle.generate_translation_prompt(full_context, main_indices)
     
     response = llm.create_chat_completion(
         messages=[
@@ -87,6 +87,38 @@ def translate_text(
     
     return translated_text
 
+def translate_plain_text(
+    llm: Any,
+    text: str,
+    system_prompt: str,
+    max_tokens: int = 2048,
+    temperature: float = 0.2,
+    log_fn: Callable[[str], None] = print
+) -> str:
+    """使用LLM翻译纯文本"""
+    
+    text_length = len(text)
+    log_fn(localization.get("msg_translating_text").format(characters_count=text_length))
+    
+    user_prompt = prompt.plain_text.generate_translation_prompt(text)
+    
+    response = llm.create_chat_completion(
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ],
+        max_tokens=max_tokens,
+        temperature=temperature
+    )
+    
+    translated_text = response["choices"][0]["message"]["content"].strip()
+    
+    log_fn(localization.get("msg_translation_complete")
+        .format(result_length=len(translated_text)))
+    logger.info(f"纯文本翻译结果：\n{translated_text}")
+    
+    return translated_text
+
 def ask_for_recommendation(
         llm: Any,
         chunk: Dict[str, Any],
@@ -102,8 +134,8 @@ def ask_for_recommendation(
     # 确定主要翻译的索引范围
     main_indices = chunk['main_indices']
     
-    review_system_prompt = prompt.generate_recommendation_system_prompt(target_lang)
-    user_prompt = prompt.generate_recommendation_prompt(full_context,main_indices,translated_text)
+    review_system_prompt = prompt.subtitle.generate_recommendation_system_prompt(target_lang)
+    user_prompt = prompt.subtitle.generate_recommendation_prompt(full_context,main_indices,translated_text)
     response = llm.create_chat_completion(
         messages=[
             {"role": "system", "content": review_system_prompt},
@@ -140,7 +172,7 @@ def review_translation(
     translated_lines = parse_translation_text(translated_text)
     
     if len(translated_lines) != len(main_indices):
-        user_prompt = prompt.generate_review_translation_prompt(full_context,main_indices,translated_text)
+        user_prompt = prompt.subtitle.generate_review_translation_prompt(full_context,main_indices,translated_text)
         # user_prompt =prompt.generate_translation_prompt(full_context, main_indices)
         response = llm.create_chat_completion(
             messages=[
@@ -166,6 +198,32 @@ def review_translation(
     else:
         logger.info("原文与译文条数匹配，无需改进")
         return translated_text
+    
+def review_translation_plain_text(
+        llm: Any,
+        original_text: str,
+        translated_text: str,
+        system_prompt: str,
+        max_tokens: int = 2048,
+        temperature: float = 0.2, 
+        log_fn: Callable[[str], None] = print) -> str:
+    """改进纯文本翻译结果"""
+    user_prompt = prompt.plain_text.generate_review_translation_prompt(original_text, translated_text)
+    response = llm.create_chat_completion(
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ],
+        max_tokens=max_tokens,
+        temperature=temperature
+    )
+    improved_translation = response["choices"][0]["message"]["content"].strip()
+    # 删除<think>标签
+    improved_translation = re.sub(r"<think>[\s\S]*?</think>", "", improved_translation)
+    logger.info(f"纯文本review改进翻译提示词：{user_prompt}")
+    logger.info(f"原翻译: {translated_text}")
+    logger.info(f"改进后的翻译: {improved_translation}")
+    return improved_translation
 
 def improve_translation_with_recommendation(
         llm: Any,
@@ -181,7 +239,7 @@ def improve_translation_with_recommendation(
     
     main_indices = chunk['main_indices']
     
-    user_prompt = prompt.generate_improved_translation_prompt_with_recommendation(full_context,main_indices,translated_text,recommendation)
+    user_prompt = prompt.subtitle.generate_improved_translation_prompt_with_recommendation(full_context,main_indices,translated_text,recommendation)
     response = llm.create_chat_completion(
         messages=[
             {"role": "system", "content": system_prompt},

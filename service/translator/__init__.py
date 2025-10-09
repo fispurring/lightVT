@@ -175,7 +175,7 @@ def translate_srt_text(
         llm = llm_helper.create_llm(model_path, n_gpu_layers)
         
         # 生成系统提示
-        system_prompt = prompt.generate_system_prompt(source_lang, target_lang)
+        system_prompt = prompt.subtitle.generate_system_prompt(source_lang, target_lang)
         
         # 分块处理
         chunks = chunk_subtitles_with_context(subtitles, chunk_size,context_size)
@@ -248,6 +248,110 @@ def translate_srt_text(
         log_fn(localization.get("log_translation_completed").format(output_path=output_path))
         return True
         
+    except Exception as e:
+        log_fn(localization.get("log_translation_error").format(error_message=str(e), traceback=traceback.format_exc()))
+        return False
+    
+def translate_plain_text_file(
+    input_path: str, 
+    output_path: str, 
+    model_path: str, 
+    source_lang: str, 
+    target_lang: str,
+    n_gpu_layers: int = 0,
+    reflection_enabled: bool = False,
+    log_fn: Callable[[str], None] = print,
+    stop_event: Optional[Any] = None
+) -> bool:
+    """翻译纯文本文件的主函数"""
+    try:
+        # 检查停止信号
+        if stop_event and stop_event.is_set():
+            log_fn(localization.get("log_processing_stopped"))
+            return False
+        
+        # 读取输入文件
+        log_fn(f"{localization.get('log_reading_plain_text_file')} {input_path}")
+        content = utils.safe_read_file(input_path)
+        
+        # 检测术语表
+        if glossary.is_empty():
+            log_fn(localization.get("log_no_glossary"))
+            glossary.load_generated_glossary(
+                subtitle_text=content,
+                target_language=target_lang,
+                model_path=model_path,
+                n_gpu_layers=n_gpu_layers,
+                stop_event=stop_event,
+                update_progress=log_fn
+            )
+        else:
+            log_fn(localization.get("log_glossary_found"))
+        
+        # 初始化LLM
+        log_fn(localization.get("log_initializing_translation_model").format(n_gpu_layers=n_gpu_layers))
+        llm = llm_helper.create_llm(model_path, n_gpu_layers)
+        
+        # 生成系统提示
+        system_prompt = prompt.plain_text.generate_system_prompt(source_lang, target_lang)
+        
+        #按照句子数量分块
+        sentences = re.split(r'(?<=[。！？\.\!\?])\s*', content)
+        max_sentences_per_chunk = 5
+        chunks = []
+        for i in range(0, len(sentences), max_sentences_per_chunk):
+            chunk = ''.join(sentences[i:i + max_sentences_per_chunk]).strip()
+            if chunk:
+                chunks.append(chunk)
+        log_fn(localization.get("log_chunking_plain_text").format(chunks_length=len(chunks)))
+            
+        translated_text = ""
+        for i, chunk in enumerate(chunks):
+            if stop_event and stop_event.is_set():
+                log_fn(localization.get("log_received_stop_signal"))
+                return False
+            
+            log_fn(localization.get("log_translating_plain_text_chunk").format(chunk_index=i+1, total_chunks=len(chunks)))
+            
+            
+            # 翻译文本
+            chunk_translated_text = llm_helper.translate_plain_text(
+                llm, chunk, system_prompt, log_fn=log_fn
+            )
+            
+            # 只有在启用反思时才进行改良
+            # if reflection_enabled:
+            #     log_fn(localization.get("log_reflection_improvement"))
+                
+                # #改良意见
+                # recommendation = llm_helper.ask_for_recommendation_plain_text(
+                #     llm,
+                #     content,
+                #     translated_text,
+                #     target_lang=target_lang,
+                #     log_fn=log_fn
+                # )
+                
+                # #改良翻译
+                # translated_text = llm_helper.improve_translation_with_recommendation_plain_text(
+                #     llm,
+                #     content,
+                #     translated_text,
+                #     recommendation,
+                #     system_prompt,
+                #     log_fn=log_fn
+                # )
+            # else:
+            #     log_fn(localization.get("log_reflection_disabled"))
+
+            translated_text += chunk_translated_text
+            
+        # 保存结果
+        os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(translated_text)
+        log_fn(localization.get("log_translation_completed").format(output_path=output_path))
+        return True
     except Exception as e:
         log_fn(localization.get("log_translation_error").format(error_message=str(e), traceback=traceback.format_exc()))
         return False

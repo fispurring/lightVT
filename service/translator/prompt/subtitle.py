@@ -110,28 +110,6 @@ def generate_recommendation_system_prompt(target_lang: str) -> str:
     好的翻译不需要强行改进。
 """
 
-# def generate_translation_prompt(context_chunk: List[Dict], main_indices: List[int]) -> str:
-#     """生成包含上下文的翻译提示"""
-    
-#     # 构建上下文文本
-#     context_text = "\n".join([f"{i+1}. {s['text']}" for i, s in enumerate(context_chunk)])
-    
-#     main_text = "\n".join([f"{i+1}. {context_chunk[i]['text']}" for i in main_indices])
-    
-#     # 标记需要翻译的部分
-#     translate_indices = [str(i+1) for i in main_indices]
-    
-#     return f"""请翻译以下字幕，注意保持上下文连贯性。
-
-# 原文上下文：
-# {context_text}
-
-# 只翻译序号为 {', '.join(translate_indices)} 的字幕，其他字幕只作为上下文环境参考，绝对不要翻译
-# 保持人称代词、术语翻译的一致性。
-
-# 翻译结果格式：
-# 编号. 翻译内容"""
-
 def parse_chunk(chunk: List[Dict]) -> str:
     """将字幕块转换为字符串"""
     return "\n".join([f"[[{s['id']}]]\n{s['text']}" for i, s in enumerate(chunk)])

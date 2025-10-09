@@ -6,9 +6,9 @@ from tkinter import messagebox
 import traceback
 import customtkinter as ctk
 from customtkinter import filedialog
-from main import process_video_file,get_logger,utils
+from main import process_file,get_logger,utils
 from service import localization
-from defs import FileType, get_supported_subtitle_types, get_supported_video_types
+from defs import FileType, get_supported_subtitle_types, get_supported_text_types, get_supported_video_types
 from gui.options_dialog import OptionsDialog
 import utils
 import sys
@@ -251,6 +251,7 @@ class LightVTGUI:
         self.processing_mode_menu = ctk.CTkOptionMenu(
             options_frame,
             values=[
+                processing_mode_k2v["translate_plain_text"],
                 processing_mode_k2v["translate"],
                 processing_mode_k2v["extract_subtitle"]
             ],
@@ -340,12 +341,14 @@ class LightVTGUI:
         
     def open_glossary_dialog(self):
         """打开术语表对话框"""
+        processing_mode_v2k = localization.get("processing_mode_v2k")
         dialog = GlossaryDialog(self.root, 
                                 filename=self.input_var.get(),
                                 input_path=self.input_var.get(),
                                 model_path=self.model_var.get(),
                                 target_lang=self.target_lang_var.get(),
-                                parent_log_message=self.log_message
+                                parent_log_message=self.log_message,
+                                processing_mode= processing_mode_v2k[self.processing_mode_var.get()]
                             )
         self.root.wait_window(dialog)
         
@@ -446,6 +449,10 @@ class LightVTGUI:
         filename = filedialog.askopenfilename(
             title=localization.get("select_video_or_subtitle_file"),
             filetypes=[
+                (
+                    localization.get("text_files"),
+                    utils.format_file_types(get_supported_text_types())
+                ),
                 (
                     localization.get("video_files"), 
                     utils.format_file_types(get_supported_video_types())
@@ -567,8 +574,7 @@ class LightVTGUI:
         """在后台线程中处理文件"""
         try:
             # 确定是否为仅提取模式
-            processing_mode_k2v = localization.get("processing_mode_k2v")
-            extract_only = (self.processing_mode_var.get() == processing_mode_k2v["extract_subtitle"])
+            processing_mode_v2k = localization.get("processing_mode_v2k")
             
             # 这里调用您的原始处理逻辑
             args = {
@@ -577,7 +583,7 @@ class LightVTGUI:
                 'model_path': self.model_var.get(),
                 'source_lang': self.source_lang_var.get(),
                 'target_lang': self.target_lang_var.get(),
-                'extract_only': extract_only,
+                "processing_mode": processing_mode_v2k[self.processing_mode_var.get()],
                 'gpu_layers': int(self.gpu_layers_var.get()),
                 'reflection_enabled': self.reflection_enabled_var.get(),  # 添加反思参数
                 'stop_event': self.stop_event,
@@ -588,7 +594,7 @@ class LightVTGUI:
             self.log_message(f"{msg_start_processing} {args['input']}")
             
             # 调用处理函数
-            process_video_file(args)
+            process_file(args)
             
             if self.stop_event.is_set():
                 self.log_message(localization.get("msg_processing_stopped"))

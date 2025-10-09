@@ -33,6 +33,7 @@
     "all_files": "所有文件",
     "select_video_or_subtitle_file": "选择视频或字幕文件",
     "select_output_file": "选择输出文件",
+    "text_files": "文本文件",
     "video_files": "视频文件",
     "subtitle_files": "字幕文件",
     "iso_to_lang": {
@@ -62,10 +63,12 @@
         "俄语": "ru"
     },
     "processing_mode_k2v": {
+        "translate_plain_text": "翻译纯文本",
         "translate": "翻译字幕",
         "extract_subtitle": "仅提取字幕"
     },
     "processing_mode_v2k": {
+        "翻译纯文本": "translate_plain_text",
         "翻译字幕": "translate",
         "仅提取字幕": "extract_subtitle"
     },
@@ -101,6 +104,7 @@
     "log_translation_error": "翻译过程中发生错误: {error_message}\n{traceback}",
     "log_extracting_and_translating_subtitles": "提取并翻译字幕中...",
     "log_extracting_subtitles": "提取字幕中...",
+    "log_translating_plain_text": "翻译纯文本中...",
     "log_translating_subtitles": "翻译字幕中...",
     "glossary_management": "术语表管理",
     "glossary_dialog_tips": "术语表将自动应用到翻译过程中。如果未填写，将在翻译过程中智能生成术语表，以确保翻译术语的一致性。",
@@ -127,6 +131,7 @@
     "log_glossary_batch_complete": "第 {batch_index}/{batch_count} 批术语翻译完成",
     "error_input_file_empty": "错误：文件路径不能为空",
     "error_model_path_empty": "错误：模型文件路径不能为空",
+    "error_processing_mode_empty": "错误：处理模式不能为空",
     "log_glossary_term_frequency_completed": "术语频率统计完成...",
     "unsaved_changes": "未保存的更改",
     "unsaved_changes_tips": "⚠️ 术语表有未保存的更改\n\n是否保存后关闭？",

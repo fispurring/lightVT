@@ -33,6 +33,7 @@
     "all_files": "All Files",
     "select_video_or_subtitle_file": "Select video or subtitle file",
     "select_output_file": "Select Output File",
+    "text_files": "Text Files",
     "video_files": "Video Files",
     "subtitle_files": "Subtitle Files",
     "iso_to_lang": {
@@ -62,10 +63,12 @@
         "Russian": "ru"
     },
     "processing_mode_k2v":{
+        "translate_plain_text": "Translate Plain Text",
         "translate": "Translate",
         "extract_subtitle": "Extract Subtitle Only"
     },
     "processing_mode_v2k": {
+        "Translate Plain Text": "translate_plain_text",
         "Translate": "translate",
         "Extract Subtitle Only": "extract_subtitle"
     },
@@ -101,6 +104,7 @@
     "log_translation_error": "An error occurred during translation: {error_message}\n{traceback}",
     "log_extracting_and_translating_subtitles": "Extracting and translating subtitles...",
     "log_extracting_subtitles": "Extracting subtitles...",
+    "log_translating_plain_text": "Translating plain text...",
     "log_translating_subtitles": "Translating subtitles...",
     "glossary_management": "Glossary Management",
     "glossary_dialog_tips": "Glossary will be automatically applied during translation. If not provided, a glossary will be intelligently generated during translation to ensure consistency of translated terms.",
@@ -127,6 +131,7 @@
     "log_glossary_batch_complete": "Batch {batch_index}/{batch_count} term translation complete",
     "error_input_file_empty": "Error: Input file path cannot be empty",
     "error_model_path_empty": "Error: Model file path cannot be empty",
+    "error_processing_mode_empty": "Error: Processing mode cannot be empty",
     "log_glossary_term_frequency_completed": "Term frequency statistics completed...",
     "unsaved_changes": "Unsaved Changes",
     "unsaved_changes_tips": "⚠️ The glossary has unsaved changes\n\nDo you want to save before closing?",
