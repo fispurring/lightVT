@@ -23,8 +23,54 @@ def generate_system_prompt(source_lang: str, target_lang: str) -> str:
 
 def generate_translation_prompt(text: str) -> str:
     """生成纯文本翻译提示"""
+    # 术语表
+    glossary_prompt = glossary.generate_glossary_prompt(text)
     return f"""请翻译以下文本：
-
 {text}
 
+{glossary_prompt}
+
+"""
+
+def generate_recommendation_system_prompt(target_lang: str) -> str:
+        return f"""你是专业的翻译质量评估专家。
+任务：评估文本翻译质量，仅在发现严重问题时给出改进建议。自动检测原文语言，译文目标语言是{target_lang}。
+原则：
+    检查译文语言是否为{target_lang}，如果不是，请给出建议。
+    好的翻译不需要强行改进。
+"""
+
+def generate_recommendation_prompt(source_text:str,translated_text:str):
+    """生成改进建议提示"""
+    
+    return f"""请查阅原文以及译文，评估翻译质量，提出简洁明了的改进建议。
+
+原文：
+{source_text}
+
+译文：
+{translated_text}
+
+"""
+
+def generate_improved_translation_prompt_with_recommendation(source_text: str, translated_text:str,recommendation:str) -> str:
+    """生成包含上下文的翻译提示"""
+    # 计算需要输出的字幕条数
+    return f"""/nothink
+请根据建议改进翻译。
+
+原文：
+{source_text}
+
+译文：
+{translated_text}
+
+改进建议:
+{recommendation}
+
+结合原文、译文以及改进建议，输出最终的翻译译文。
+保持人称代词、术语翻译的一致性。
+
+【重要】格式要求：
+1. 只给出译文，不要有任何解释、注释或标记
 """

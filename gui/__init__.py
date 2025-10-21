@@ -487,6 +487,10 @@ class LightVTGUI:
             defaultextension=".srt",
             filetypes=[
                 (
+                    localization.get("text_files"), 
+                    utils.format_file_types(get_supported_text_types())
+                ),
+                (
                     localization.get("subtitle_files"), 
                     utils.format_file_types(get_supported_subtitle_types())
                 ), 

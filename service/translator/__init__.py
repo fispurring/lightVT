@@ -191,7 +191,7 @@ def translate_srt_text(
             log_fn(localization.get("log_translating_chunk").format(chunk_index=i+1, total_chunks=len(chunks)))
             
             # 翻译
-            translated_text = llm_helper.translate_text(
+            translated_text = llm_helper.subtitle.translate_text(
                 llm, chunk, system_prompt, log_fn=log_fn
             )
             
@@ -200,7 +200,7 @@ def translate_srt_text(
                 log_fn(localization.get("log_reflection_improvement"))
                 
                 #改良意见
-                recommendation = llm_helper.ask_for_recommendation(
+                recommendation = llm_helper.subtitle.ask_for_recommendation(
                     llm,
                     chunk,
                     translated_text,
@@ -209,7 +209,7 @@ def translate_srt_text(
                 )
                 
                 #改良翻译
-                translated_text = llm_helper.improve_translation_with_recommendation(
+                translated_text = llm_helper.subtitle.improve_translation_with_recommendation(
                     llm,
                     chunk,
                     translated_text,
@@ -221,7 +221,7 @@ def translate_srt_text(
                 log_fn(localization.get("log_reflection_disabled"))
 
             #review翻译
-            translated_text = llm_helper.review_translation(
+            translated_text = llm_helper.subtitle.review_translation(
                 llm,
                 chunk,
                 translated_text,
@@ -297,7 +297,7 @@ def translate_plain_text_file(
         
         #按照句子数量分块
         sentences = re.split(r'(?<=[。！？\.\!\?])\s*', content)
-        max_sentences_per_chunk = 5
+        max_sentences_per_chunk = 10
         chunks = []
         for i in range(0, len(sentences), max_sentences_per_chunk):
             chunk = ''.join(sentences[i:i + max_sentences_per_chunk]).strip()
@@ -311,38 +311,39 @@ def translate_plain_text_file(
                 log_fn(localization.get("log_received_stop_signal"))
                 return False
             
-            log_fn(localization.get("log_translating_plain_text_chunk").format(chunk_index=i+1, total_chunks=len(chunks)))
+            log_fn(localization.get("log_translating_chunk").format(chunk_index=i+1, total_chunks=len(chunks)))
             
             
             # 翻译文本
-            chunk_translated_text = llm_helper.translate_plain_text(
+            chunk_translated_text = llm_helper.plain_text.translate_text(
                 llm, chunk, system_prompt, log_fn=log_fn
             )
             
             # 只有在启用反思时才进行改良
-            # if reflection_enabled:
-            #     log_fn(localization.get("log_reflection_improvement"))
+            if reflection_enabled:
+                log_fn(localization.get("log_reflection_improvement"))
                 
-                # #改良意见
-                # recommendation = llm_helper.ask_for_recommendation_plain_text(
-                #     llm,
-                #     content,
-                #     translated_text,
-                #     target_lang=target_lang,
-                #     log_fn=log_fn
-                # )
+                #改良意见
+                recommendation = llm_helper.plain_text.ask_for_recommendation(
+                    llm,
+                    chunk,
+                    chunk_translated_text,
+                    target_lang=target_lang,
+                    log_fn=log_fn
+                )
                 
-                # #改良翻译
-                # translated_text = llm_helper.improve_translation_with_recommendation_plain_text(
-                #     llm,
-                #     content,
-                #     translated_text,
-                #     recommendation,
-                #     system_prompt,
-                #     log_fn=log_fn
-                # )
-            # else:
-            #     log_fn(localization.get("log_reflection_disabled"))
+                #改良翻译
+                chunk_translated_text = llm_helper.plain_text.improve_translation_with_recommendation(
+                    llm,
+                    chunk,
+                    chunk_translated_text,
+                    recommendation,
+                    system_prompt,
+                    log_fn=log_fn
+                )
+                
+            else:
+                log_fn(localization.get("log_reflection_disabled"))
 
             translated_text += chunk_translated_text
             

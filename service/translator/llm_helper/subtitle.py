@@ -1,5 +1,5 @@
 from typing import Dict, List, Callable, Any, Optional, Tuple, Any
-from . import prompt
+from service.translator import prompt
 import re
 from service.log import get_logger
 from service import localization
@@ -35,14 +35,6 @@ def parse_translation_text(translated_text: str) -> List[str]:
         parsed_lines.append(current_line.strip())
     
     return parsed_lines
-
-def create_llm(model_path: str, n_gpu_layers: int = 0, n_ctx: int = 4096) -> Any:
-    """创建并返回LLM模型实例"""
-    return Llama(
-        model_path=model_path,
-        n_gpu_layers=n_gpu_layers,
-        n_ctx=n_ctx
-    )
 
 def translate_text(
     llm: Any, 
@@ -87,38 +79,6 @@ def translate_text(
     
     return translated_text
 
-def translate_plain_text(
-    llm: Any,
-    text: str,
-    system_prompt: str,
-    max_tokens: int = 2048,
-    temperature: float = 0.2,
-    log_fn: Callable[[str], None] = print
-) -> str:
-    """使用LLM翻译纯文本"""
-    
-    text_length = len(text)
-    log_fn(localization.get("msg_translating_text").format(characters_count=text_length))
-    
-    user_prompt = prompt.plain_text.generate_translation_prompt(text)
-    
-    response = llm.create_chat_completion(
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ],
-        max_tokens=max_tokens,
-        temperature=temperature
-    )
-    
-    translated_text = response["choices"][0]["message"]["content"].strip()
-    
-    log_fn(localization.get("msg_translation_complete")
-        .format(result_length=len(translated_text)))
-    logger.info(f"纯文本翻译结果：\n{translated_text}")
-    
-    return translated_text
-
 def ask_for_recommendation(
         llm: Any,
         chunk: Dict[str, Any],
@@ -154,6 +114,45 @@ def ask_for_recommendation(
     logger.info(f"改进建议提示词：{user_prompt}")
     logger.info(f"改进建议: {recommendation}")
     return recommendation
+
+def improve_translation_with_recommendation(
+        llm: Any,
+        chunk: Dict[str, Any], 
+        translated_text: str,
+        recommendation: str,
+        system_prompt: str,
+        max_tokens: int = 2048,
+        temperature: float = 0.3,
+        log_fn: Callable[[str], None] = print) -> str:
+    """根据改进意见改进翻译"""
+    full_context = chunk['context']
+    
+    main_indices = chunk['main_indices']
+    
+    user_prompt = prompt.subtitle.generate_improved_translation_prompt_with_recommendation(full_context,main_indices,translated_text,recommendation)
+    response = llm.create_chat_completion(
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ],
+        max_tokens=max_tokens,
+        temperature=temperature,
+
+    )
+    
+    improved_translation = response["choices"][0]["message"]["content"].strip()
+    
+    # 删除<think>标签
+    improved_translation = re.sub(r"<think>[\s\S]*?</think>", "", improved_translation)
+    
+    src_text = "\n".join([f"{i+1}. {s['text']}" for i, s in enumerate(chunk["main"])])
+    
+    log_fn(localization.get("msg_translated_text_improved"))
+    logger.info(f"改进翻译提示词：{user_prompt}")
+    logger.info(f"原文:{src_text}")
+    logger.info(f"原翻译: {translated_text}")
+    logger.info(f"改进后的翻译: {improved_translation}")
+    return improved_translation
 
 def review_translation(
         llm: Any,
@@ -198,68 +197,3 @@ def review_translation(
     else:
         logger.info("原文与译文条数匹配，无需改进")
         return translated_text
-    
-def review_translation_plain_text(
-        llm: Any,
-        original_text: str,
-        translated_text: str,
-        system_prompt: str,
-        max_tokens: int = 2048,
-        temperature: float = 0.2, 
-        log_fn: Callable[[str], None] = print) -> str:
-    """改进纯文本翻译结果"""
-    user_prompt = prompt.plain_text.generate_review_translation_prompt(original_text, translated_text)
-    response = llm.create_chat_completion(
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ],
-        max_tokens=max_tokens,
-        temperature=temperature
-    )
-    improved_translation = response["choices"][0]["message"]["content"].strip()
-    # 删除<think>标签
-    improved_translation = re.sub(r"<think>[\s\S]*?</think>", "", improved_translation)
-    logger.info(f"纯文本review改进翻译提示词：{user_prompt}")
-    logger.info(f"原翻译: {translated_text}")
-    logger.info(f"改进后的翻译: {improved_translation}")
-    return improved_translation
-
-def improve_translation_with_recommendation(
-        llm: Any,
-        chunk: Dict[str, Any], 
-        translated_text: str,
-        recommendation: str,
-        system_prompt: str,
-        max_tokens: int = 2048,
-        temperature: float = 0.2,
-        log_fn: Callable[[str], None] = print) -> str:
-    """根据改进意见改进翻译"""
-    full_context = chunk['context']
-    
-    main_indices = chunk['main_indices']
-    
-    user_prompt = prompt.subtitle.generate_improved_translation_prompt_with_recommendation(full_context,main_indices,translated_text,recommendation)
-    response = llm.create_chat_completion(
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ],
-        max_tokens=max_tokens,
-        temperature=temperature,
-
-    )
-    
-    improved_translation = response["choices"][0]["message"]["content"].strip()
-    
-    # 删除<think>标签
-    improved_translation = re.sub(r"<think>[\s\S]*?</think>", "", improved_translation)
-    
-    src_text = "\n".join([f"{i+1}. {s['text']}" for i, s in enumerate(chunk["main"])])
-    
-    log_fn(localization.get("msg_translated_text_improved"))
-    logger.info(f"改进翻译提示词：{user_prompt}")
-    logger.info(f"原文:{src_text}")
-    logger.info(f"原翻译: {translated_text}")
-    logger.info(f"改进后的翻译: {improved_translation}")
-    return improved_translation
