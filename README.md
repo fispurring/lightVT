@@ -24,6 +24,7 @@
 - 🎬 **Video Subtitle Extraction**: Intelligently extract subtitle content from video files
 - 🌍 **Smart Translation**: High-quality multilingual translation based on large language models
 - 📝 **Subtitle File Translation**: Directly process SRT subtitle files
+- 🗒️ **Plain Text Translation**: Support for translating plain text files, such as .txt
 - ⚡ **GPU Acceleration**: Support CUDA acceleration for significantly improved processing speed
 - 🔧 **Simple Interface**: User-friendly graphical interface with intuitive operation
 
@@ -141,6 +142,7 @@ Recommended models:
 - 🎬 **视频字幕提取**：从视频文件中智能提取字幕内容
 - 🌍 **智能翻译**：基于大语言模型的高质量多语言翻译
 - 📝 **字幕文件翻译**：直接处理 SRT 字幕文件
+- 🗒️ **纯文本翻译**：支持翻译纯文本文件，比如.txt
 - ⚡ **GPU 加速**：支持 CUDA 加速，显著提升处理速度
 - 🔧 **简洁界面**：用户友好的图形界面，操作简单直观
 
