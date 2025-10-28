@@ -47,7 +47,8 @@
         "de": "German",
         "es": "Spanish",
         "it": "Italian",
-        "ru": "Russian"
+        "ru": "Russian",
+        "bg": "Bulgarian"
     },
     "lang_to_iso": {
         "Auto Detect": "auto",
@@ -60,7 +61,8 @@
         "German": "de",
         "Spanish": "es",
         "Italian": "it",
-        "Russian": "ru"
+        "Russian": "ru",
+        "Bulgarian": "bg"
     },
     "processing_mode_k2v":{
         "translate_plain_text": "Translate Plain Text",

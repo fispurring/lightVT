@@ -457,7 +457,7 @@ def translate_terms_with_context(
         
         try:
            
-            logger.info(f"正在翻译第 {batch_index} 批术语（{len(batch_terms)} 个）")
+            logger.info(f"正在翻译第 {batch_index} 批术语（{len(batch_terms)} 个）target_language={target_language}...")
 
             # 构建带上下文的翻译提示
             prompt = build_context_aware_translation_prompt(

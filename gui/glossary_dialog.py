@@ -578,11 +578,10 @@ class GlossaryDialog(ctk.CTkToplevel):
         """处理AI智能填充术语表"""
         try:
             self.stop_event.clear()
-            
             # 调用生成术语表的函数
             args = {
                 'input': self.input_path,
-                'target_language': self.target_lang,
+                'target_lang': self.target_lang,
                 'model_path': self.model_path,
                 'n_gpu_layers': self.n_gpu_layers,
                 'stop_event': self.stop_event,

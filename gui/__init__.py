@@ -237,7 +237,8 @@ class LightVTGUI:
                 iso_to_lang["de"],
                 iso_to_lang["es"],
                 iso_to_lang["it"],
-                iso_to_lang["ru"]
+                iso_to_lang["ru"],
+                iso_to_lang["bg"]
             ],
             variable=self.target_lang_var,
             width=120

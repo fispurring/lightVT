@@ -85,7 +85,7 @@ def apply_translation_to_chunk(
 ) -> List[Dict[str, str]]:
     """将翻译结果应用到字幕块"""
     # 分割翻译结果
-    translated_lines = llm_helper.parse_translation_text(translated_text)
+    translated_lines = llm_helper.subtitle.parse_translation_text(translated_text)
     
     main_chunk = chunk["main"]
     
