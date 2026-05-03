@@ -6,6 +6,12 @@ from typing import Dict
 import os
 import threading
 
+try:
+    from concurrent_log_handler import ConcurrentRotatingFileHandler
+    HasConcurrentHandler = True
+except ImportError:
+    HasConcurrentHandler = False
+
 lock = threading.Lock()
 loggerDict: Dict[str,logging.Logger] = {}
 
@@ -46,9 +52,19 @@ def setup_logger(name: str = "LightVT", log_file: str = "app.log", level: int = 
     )
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(formatter)
-    
+
     # 设置轮转文件名后缀
     file_handler.suffix = "%Y-%m-%d"
+
+    # 自定义轮转函数，处理 Windows 多线程写入时的 PermissionError
+    def safe_rotator(source, destination):
+        try:
+            if os.path.exists(source):
+                os.rename(source, destination)
+        except PermissionError:
+            pass
+
+    file_handler.rotator = safe_rotator
     
     # 添加处理器
     logger.addHandler(console_handler)
