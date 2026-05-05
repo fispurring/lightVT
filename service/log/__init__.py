@@ -80,4 +80,6 @@ def get_logger(name: str = "LightVT") -> logging.Logger:
             logger = loggerDict[name] = setup_logger(name)
         return logger
 
+logging.getLogger("llama_cpp").setLevel(logging.ERROR)
+
 __all__ = ["get_logger"]

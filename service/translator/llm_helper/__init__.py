@@ -8,5 +8,6 @@ def create_llm(model_path: str, n_gpu_layers: int = 0, n_ctx: int = 4096) -> Any
     return Llama(
         model_path=model_path,
         n_gpu_layers=n_gpu_layers,
-        n_ctx=n_ctx
+        n_ctx=n_ctx,
+        verbose=False
     )

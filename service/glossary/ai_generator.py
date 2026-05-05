@@ -90,7 +90,8 @@ def generate_glossary_from_subtitle(
         llm = Llama(
             model_path=model_path,
             n_gpu_layers=n_gpu_layers,
-            n_ctx=4096
+            n_ctx=4096,
+            verbose=False
         )
         # 步骤2: 从每个切片提取术语（包含上下文）
         term_contexts = extract_terms_with_context(chunks, llm, config, stop_event, add_progress)
@@ -258,13 +259,13 @@ def extract_terms_from_chunk(
 - 最多提取{config.max_terms_per_chunk}个最重要的术语
 
 【输出格式】
-请以JSON数组格式输出：
-["term1", "term2","term3", ...]
+严格只输出 JSON 数组，不要输出任何思考过程、分析说明或 markdown 代码围栏。示例：
+["term1", "term2", "term3"]
 
 【文本内容】
 {chunk}
 
-请开始提取：
+请直接输出 JSON 数组：
 """
     try:
         # 🔥 使用内部翻译函数
@@ -276,33 +277,110 @@ def extract_terms_from_chunk(
         logger.error(f"片段 {chunk_index} 术语提取失败: {e}")
         return []
 
+def _strip_thinking(response: str) -> str:
+    """剥除 LLM 思考过程（Reasoning/Thinking 标签及内容），保留最终答案"""
+    # 1. 剥除 <think>...</think> 标签（DeepSeek-R1 等）
+    response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL | re.IGNORECASE)
+    # 2. 剥除 Thinking Process: ... 到 "Output:" / "Final Answer:" 或第一个 JSON 数组之前的段落
+    response = re.sub(
+        r'(?:Thinking\s*Process|Reasoning|思考过程|分析过程)[:：]\s*.*?'
+        r'(?:Output[:：]|Final\s*Answer[:：]|答案[:：]|请开始提取：|请输出|JSON\s*输出|输出格式[:：])\s*',
+        '',
+        response,
+        flags=re.DOTALL | re.IGNORECASE
+    )
+    # 3. 如果仍有明显的思考段落（多级列表且不含 JSON 数组），尝试截断到第一个 '['
+    first_bracket = response.find('[')
+    if first_bracket > 0:
+        prefix = response[:first_bracket]
+        if len(prefix) > 300 and re.search(r'(?:\*\*.*\*\*|\d+\.\s+|Analyze|Step|Task|Categories|注意|请)', prefix):
+            response = response[first_bracket:]
+    return response.strip()
+
+def _extract_json_array(response: str) -> Optional[str]:
+    """从 LLM 响应中提取 JSON 数组文本"""
+    # 优先匹配 markdown 代码围栏内的 JSON 数组
+    code_block_match = re.search(r'```(?:json)?\s*(\[.*?\])\s*```', response, re.DOTALL)
+    if code_block_match:
+        return code_block_match.group(1)
+    # 使用括号计数器寻找最外层合法 JSON 数组起点
+    start = response.find('[')
+    if start == -1:
+        return None
+    depth = 0
+    in_string = False
+    escape = False
+    for i, ch in enumerate(response[start:], start):
+        if escape:
+            escape = False
+            continue
+        if ch == '\\':
+            escape = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if ch == '[':
+            depth += 1
+        elif ch == ']':
+            depth -= 1
+            if depth == 0:
+                return response[start:i+1]
+    return None
+
+def _repair_json_array(json_text: str) -> str:
+    """修复 LLM 输出的常见 JSON 数组问题"""
+    # 移除单行注释
+    json_text = re.sub(r'//.*?$', '', json_text, flags=re.MULTILINE)
+    # 移除多行注释
+    json_text = re.sub(r'/\*.*?\*/', '', json_text, flags=re.DOTALL)
+    # 移除尾逗号（}, ]）前的逗号）
+    json_text = re.sub(r',\s*([}\]])', r'\1', json_text)
+    return json_text
+
+def _fallback_line_parse(response: str) -> List[str]:
+    """逐行提取双引号包围的字符串作为术语"""
+    terms = []
+    for line in response.split('\n'):
+        line = line.strip()
+        if line.startswith('"') and line.endswith('"'):
+            term = line.strip('"').strip().lower()
+            if 2 <= len(term) <= 50:
+                terms.append(term)
+    return terms[:15]
+
 def parse_term_extraction_response(response: str) -> List[str]:
-    """解析术语提取响应"""
+    """解析术语提取响应（多层容错）"""
     try:
-        # 提取JSON数组
-        json_match = re.search(r'\[.*?\]', response, re.DOTALL)
-        if json_match:
-            json_text = json_match.group()
-            terms_list = json.loads(json_text)
-            
+        # 第 1 层：剥除思考过程后提取 JSON
+        cleaned = _strip_thinking(response)
+        json_text = _extract_json_array(cleaned)
+        if json_text:
+            repaired = _repair_json_array(json_text)
+            try:
+                terms_list = json.loads(repaired)
+            except json.JSONDecodeError:
+                terms_list = json.loads(json_text)
             if isinstance(terms_list, list):
                 return [term.strip().lower() for term in terms_list if isinstance(term, str) and term.strip()]
         
-        # 备用解析：逐行提取
-        terms = []
-        lines = response.split('\n')
+        # 第 2 层：剥除思考过程后备用逐行解析
+        terms = _fallback_line_parse(cleaned)
+        if terms:
+            return terms
         
-        for line in lines:
-            line = line.strip()
-            if line.startswith('"') and line.endswith('"'):
-                term = line.strip('"').strip().lower()
-                if 2 <= len(term) <= 50:
-                    terms.append(term)
+        # 第 3 层：原始响应逐行解析（最终兜底）
+        terms = _fallback_line_parse(response)
+        if terms:
+            return terms
         
-        return terms[:15]  # 限制数量
+        return []
         
     except Exception as e:
         logger.error(f"解析术语提取响应失败: {e}")
+        logger.error(f"原始响应内容（前2000字符）: {response[:2000]}")
         return []
 
 def extract_term_context(text: str, term: str, context_window: int = 50) -> str:
