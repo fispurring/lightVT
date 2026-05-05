@@ -6,6 +6,8 @@ import base64
 from defs import FileType, get_supported_subtitle_types, get_supported_video_types
 import chardet
 from . import settings
+from .llm_utils import strip_thinking, extract_quoted_strings, extract_markdown_list_terms
+from .grammars import JSON_STRING_ARRAY, JSON_STRING_OBJECT, json_array_to_subtitle_format
 
 def get_gpu_info():
     """获取GPU信息"""

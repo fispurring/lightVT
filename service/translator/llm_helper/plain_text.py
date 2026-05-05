@@ -3,6 +3,7 @@ from service.translator import prompt
 import re
 from service.log import get_logger
 from service import localization
+from utils import strip_thinking
 
 logger = get_logger("LightVT")
 
@@ -43,7 +44,7 @@ def ask_for_recommendation(
         source_text:str,
         translated_text: str,
         target_lang: str, 
-        max_tokens: int = 2048, 
+        max_tokens: int = 8192, 
         temperature: float = 0.1, 
         log_fn: Callable[[str], None] = print) -> str:
     """改进翻译结果"""
@@ -61,8 +62,8 @@ def ask_for_recommendation(
     # 目前仅返回原翻译结果
     recommendation = response["choices"][0]["message"]["content"].strip()
     
-    # 删除<think>标签
-    recommendation = re.sub(r"<think>[\s\S]*?</think>", "", recommendation)
+    # 剥除可能的思考过程
+    recommendation = strip_thinking(recommendation)
     
     log_fn(localization.get("msg_improvement_prompt_generated"))
     logger.info(f"改进建议提示词：{user_prompt}")
@@ -92,8 +93,8 @@ def improve_translation_with_recommendation(
     
     improved_translation = response["choices"][0]["message"]["content"].strip()
     
-    # 删除<think>标签
-    improved_translation = re.sub(r"<think>[\s\S]*?</think>", "", improved_translation)
+    # 剥除可能的思考过程
+    improved_translation = strip_thinking(improved_translation)
     
     log_fn(localization.get("msg_translated_text_improved"))
     logger.info(f"改进翻译提示词：{user_prompt}")

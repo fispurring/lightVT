@@ -14,11 +14,10 @@ def generate_system_prompt(source_lang: str, target_lang: str) -> str:
     
     return f"""你是一个专业的文本翻译专家。{translate_lang}。
 重要规则：
-1. 只输出翻译后的文本，不要有任何解释、注释或标记
+1. 只输出翻译后的文本，禁止输出任何思考过程、分析步骤、解释或注释
 2. 保持原文的格式和语气，确保翻译自然流畅
 3. 如果遇到歌词，请直接翻译，不要用星号或其他符号替代
 4. 保持歌词的音乐符号 ♪
-5. 你可以进行深度思考，但不要在输出中包含任何 `<think>` `</think>` 标签或其内容。
 """
 
 def generate_translation_prompt(text: str) -> str:

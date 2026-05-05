@@ -7,10 +7,19 @@ import threading
 from typing import Dict, List, Set, Tuple, Optional, Callable
 from dataclasses import dataclass
 from service import log,localization
-from llama_cpp import Llama
+from llama_cpp import Llama, LlamaGrammar
+from utils import strip_thinking, extract_quoted_strings, extract_markdown_list_terms, JSON_STRING_ARRAY, JSON_STRING_OBJECT
 
 logger = log.get_logger("AIGlossaryGenerator")
 _progress_var = 0.0
+
+# System prompt 强制约束模型只输出 JSON，禁止思考过程、分析、markdown 代码块等
+JSON_ONLY_SYSTEM_PROMPT = (
+    "You are a JSON-only output assistant. "
+    "NEVER output thinking process, analysis, reasoning steps, markdown code blocks, "
+    "explanations, or any text outside the requested JSON. "
+    "Output ONLY the raw JSON array/object, without any surrounding text, labels, or formatting."
+)
 
 @dataclass
 class ExtractionConfig:
@@ -22,17 +31,26 @@ class ExtractionConfig:
     min_term_length: int = 2
     max_term_length: int = 50
 
-def _create_chat_completion(prompt: str,  llm: Llama) -> str:
-    """🔥 内部翻译函数"""
+def _create_chat_completion(
+    prompt: str,
+    llm: Llama,
+    system_prompt: Optional[str] = None,
+    grammar: Optional[LlamaGrammar] = None
+) -> str:
+    """🔥 内部翻译函数（支持可选 system prompt 和 Grammar）"""
     try:
-        response = llm.create_chat_completion(
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
-            ,
-            temperature=0.1,
-            max_tokens=4096,
-        )
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+        kwargs = {
+            "messages": messages,
+            "temperature": 0.1,
+            "max_tokens": 4096,
+        }
+        if grammar:
+            kwargs["grammar"] = grammar
+        response = llm.create_chat_completion(**kwargs)
         return response["choices"][0]["message"]["content"].strip()
     except Exception as e:
         logger.error(f"文本生成失败: {e}")
@@ -90,7 +108,7 @@ def generate_glossary_from_subtitle(
         llm = Llama(
             model_path=model_path,
             n_gpu_layers=n_gpu_layers,
-            n_ctx=4096,
+            n_ctx=8192,
             verbose=False
         )
         # 步骤2: 从每个切片提取术语（包含上下文）
@@ -258,9 +276,11 @@ def extract_terms_from_chunk(
 - 术语长度在{config.min_term_length}-{config.max_term_length}个字符
 - 最多提取{config.max_terms_per_chunk}个最重要的术语
 
-【输出格式】
-严格只输出 JSON 数组，不要输出任何思考过程、分析说明或 markdown 代码围栏。示例：
-["term1", "term2", "term3"]
+【输出格式 - 严格约束】
+- 只输出 JSON 数组，禁止输出思考过程、分析步骤、解释说明
+- 禁止输出 markdown 代码围栏（如 ```json）
+- 禁止输出任何 JSON 之外的文本
+- 示例：["term1", "term2", "term3"]
 
 【文本内容】
 {chunk}
@@ -268,8 +288,8 @@ def extract_terms_from_chunk(
 请直接输出 JSON 数组：
 """
     try:
-        # 🔥 使用内部翻译函数
-        response = _create_chat_completion(prompt, llm)
+        # 🔥 使用内部翻译函数，传入 Grammar 强制 JSON 数组输出
+        response = _create_chat_completion(prompt, llm, system_prompt=JSON_ONLY_SYSTEM_PROMPT, grammar=LlamaGrammar.from_string(JSON_STRING_ARRAY))
         terms = parse_term_extraction_response(response)
         return terms
         
@@ -277,25 +297,6 @@ def extract_terms_from_chunk(
         logger.error(f"片段 {chunk_index} 术语提取失败: {e}")
         return []
 
-def _strip_thinking(response: str) -> str:
-    """剥除 LLM 思考过程（Reasoning/Thinking 标签及内容），保留最终答案"""
-    # 1. 剥除 <think>...</think> 标签（DeepSeek-R1 等）
-    response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL | re.IGNORECASE)
-    # 2. 剥除 Thinking Process: ... 到 "Output:" / "Final Answer:" 或第一个 JSON 数组之前的段落
-    response = re.sub(
-        r'(?:Thinking\s*Process|Reasoning|思考过程|分析过程)[:：]\s*.*?'
-        r'(?:Output[:：]|Final\s*Answer[:：]|答案[:：]|请开始提取：|请输出|JSON\s*输出|输出格式[:：])\s*',
-        '',
-        response,
-        flags=re.DOTALL | re.IGNORECASE
-    )
-    # 3. 如果仍有明显的思考段落（多级列表且不含 JSON 数组），尝试截断到第一个 '['
-    first_bracket = response.find('[')
-    if first_bracket > 0:
-        prefix = response[:first_bracket]
-        if len(prefix) > 300 and re.search(r'(?:\*\*.*\*\*|\d+\.\s+|Analyze|Step|Task|Categories|注意|请)', prefix):
-            response = response[first_bracket:]
-    return response.strip()
 
 def _extract_json_array(response: str) -> Optional[str]:
     """从 LLM 响应中提取 JSON 数组文本"""
@@ -352,10 +353,14 @@ def _fallback_line_parse(response: str) -> List[str]:
     return terms[:15]
 
 def parse_term_extraction_response(response: str) -> List[str]:
-    """解析术语提取响应（多层容错）"""
+    """解析术语提取响应（多层容错兜底）"""
+    logger.debug(f"原始响应内容（前1000字符）: {response[:1000]}")
+    
     try:
         # 第 1 层：剥除思考过程后提取 JSON
-        cleaned = _strip_thinking(response)
+        cleaned = strip_thinking(response)
+        logger.debug(f"剥离思考过程后（前1000字符）: {cleaned[:1000]}")
+        
         json_text = _extract_json_array(cleaned)
         if json_text:
             repaired = _repair_json_array(json_text)
@@ -364,18 +369,36 @@ def parse_term_extraction_response(response: str) -> List[str]:
             except json.JSONDecodeError:
                 terms_list = json.loads(json_text)
             if isinstance(terms_list, list):
-                return [term.strip().lower() for term in terms_list if isinstance(term, str) and term.strip()]
+                terms = [term.strip().lower() for term in terms_list if isinstance(term, str) and term.strip()]
+                if terms:
+                    logger.debug(f"第 1 层解析成功，提取 {len(terms)} 个术语")
+                    return terms
         
-        # 第 2 层：剥除思考过程后备用逐行解析
-        terms = _fallback_line_parse(cleaned)
+        # 第 2 层：剥除思考过程后提取双引号字符串
+        terms = extract_quoted_strings(cleaned)
         if terms:
+            logger.debug(f"第 2 层解析成功（引号提取），提取 {len(terms)} 个术语")
             return terms
         
-        # 第 3 层：原始响应逐行解析（最终兜底）
-        terms = _fallback_line_parse(response)
+        # 第 3 层：剥除思考过程后提取 markdown 列表项
+        terms = extract_markdown_list_terms(cleaned)
         if terms:
+            logger.debug(f"第 3 层解析成功（列表提取），提取 {len(terms)} 个术语")
             return terms
         
+        # 第 4 层：原始响应提取双引号字符串（应对 strip_thinking 过度剥离的情况）
+        terms = extract_quoted_strings(response)
+        if terms:
+            logger.debug(f"第 4 层解析成功（原始响应引号提取），提取 {len(terms)} 个术语")
+            return terms
+        
+        # 第 5 层：原始响应提取 markdown 列表项
+        terms = extract_markdown_list_terms(response)
+        if terms:
+            logger.debug(f"第 5 层解析成功（原始响应列表提取），提取 {len(terms)} 个术语")
+            return terms
+        
+        logger.warning("所有解析层均未提取到有效术语，返回空列表")
         return []
         
     except Exception as e:
@@ -542,8 +565,8 @@ def translate_terms_with_context(
                 batch_terms, term_contexts, target_language
             )
             
-            # 🔥 使用内部翻译函数
-            response = _create_chat_completion(prompt, llm)
+            # 🔥 使用内部翻译函数，传入 Grammar 强制 JSON 对象输出
+            response = _create_chat_completion(prompt, llm, system_prompt=JSON_ONLY_SYSTEM_PROMPT, grammar=LlamaGrammar.from_string(JSON_STRING_OBJECT))
             batch_glossary = parse_translation_response(response, batch_terms)
             
             # 去重：以第一次翻译为准
@@ -618,10 +641,16 @@ def build_context_aware_translation_prompt(
 """
 
 def parse_translation_response(response: str, original_terms: List[str]) -> Dict[str, str]:
-    """解析翻译响应"""
+    """解析翻译响应（集成思考过程剥离）"""
+    logger.debug(f"翻译原始响应（前1000字符）: {response[:1000]}")
+    
+    # 先剥离可能的思考过程
+    cleaned = strip_thinking(response)
+    logger.debug(f"翻译剥离后（前1000字符）: {cleaned[:1000]}")
+    
     try:
         # 提取JSON部分
-        json_match = re.search(r'\{.*?\}', response, re.DOTALL)
+        json_match = re.search(r'\{.*?\}', cleaned, re.DOTALL)
         if json_match:
             json_text = json_match.group()
             translations = json.loads(json_text)
@@ -637,14 +666,16 @@ def parse_translation_response(response: str, original_terms: List[str]) -> Dict
                 if source_clean in original_terms_lower and target_clean:
                     valid_translations[source_clean] = target_clean
             
+            if valid_translations:
+                logger.debug(f"翻译解析成功，共 {len(valid_translations)} 条")
             return valid_translations
         
         # 备用解析
-        return fallback_parse_translation(response, original_terms)
+        return fallback_parse_translation(cleaned, original_terms)
         
     except Exception as e:
         logger.error(f"解析翻译响应失败: {e}")
-        return fallback_parse_translation(response, original_terms)
+        return fallback_parse_translation(cleaned, original_terms)
 
 def fallback_parse_translation(response: str, original_terms: List[str]) -> Dict[str, str]:
     """备用翻译解析"""

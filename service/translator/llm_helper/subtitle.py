@@ -1,9 +1,9 @@
 from typing import Dict, List, Callable, Any, Optional, Tuple, Any
 from service.translator import prompt
-import re
 from service.log import get_logger
 from service import localization
-from llama_cpp import Llama
+from llama_cpp import Llama, LlamaGrammar
+from utils import strip_thinking, JSON_STRING_ARRAY, json_array_to_subtitle_format
 
 logger = get_logger("LightVT")
 
@@ -36,11 +36,12 @@ def parse_translation_text(translated_text: str) -> List[str]:
     
     return parsed_lines
 
+
 def translate_text(
     llm: Any, 
     chunk: Dict[str, Any],
     system_prompt: str, 
-    max_tokens: int = 2048, 
+    max_tokens: int = 8192, 
     temperature: float = 0.2, 
     log_fn: Callable[[str], None] = print
 ) -> str:
@@ -65,12 +66,13 @@ def translate_text(
             {"role": "user", "content": user_prompt}
         ],
         max_tokens=max_tokens,
-        temperature=temperature
+        temperature=temperature,
+        grammar=LlamaGrammar.from_string(JSON_STRING_ARRAY),
     )
     
-    translated_text = response["choices"][0]["message"]["content"].strip()
-    #删除<think>标签
-    translated_text = re.sub(r"<think>[\s\S]*?</think>", "", translated_text)
+    translated_json = response["choices"][0]["message"]["content"].strip()
+    # Grammar 保证 JSON 输出，转换为 [[N]] 格式
+    translated_text = json_array_to_subtitle_format(translated_json, full_context, main_indices)
     
     log_fn(localization.get("msg_translation_complete")
         .format(result_length=len(translated_text)))
@@ -84,7 +86,7 @@ def ask_for_recommendation(
         chunk: Dict[str, Any],
         translated_text: str,
         target_lang: str, 
-        max_tokens: int = 2048, 
+        max_tokens: int = 8192, 
         temperature: float = 0.1, 
         log_fn: Callable[[str], None] = print) -> str:
     """改进翻译结果"""
@@ -107,8 +109,8 @@ def ask_for_recommendation(
     # 目前仅返回原翻译结果
     recommendation = response["choices"][0]["message"]["content"].strip()
     
-    # 删除<think>标签
-    recommendation = re.sub(r"<think>[\s\S]*?</think>", "", recommendation)
+    # 剥除可能的思考过程
+    recommendation = strip_thinking(recommendation)
     
     log_fn(localization.get("msg_improvement_prompt_generated"))
     logger.info(f"改进建议提示词：{user_prompt}")
@@ -121,7 +123,7 @@ def improve_translation_with_recommendation(
         translated_text: str,
         recommendation: str,
         system_prompt: str,
-        max_tokens: int = 2048,
+        max_tokens: int = 8192,
         temperature: float = 0.3,
         log_fn: Callable[[str], None] = print) -> str:
     """根据改进意见改进翻译"""
@@ -137,13 +139,11 @@ def improve_translation_with_recommendation(
         ],
         max_tokens=max_tokens,
         temperature=temperature,
-
+        grammar=LlamaGrammar.from_string(JSON_STRING_ARRAY),
     )
     
-    improved_translation = response["choices"][0]["message"]["content"].strip()
-    
-    # 删除<think>标签
-    improved_translation = re.sub(r"<think>[\s\S]*?</think>", "", improved_translation)
+    improved_json = response["choices"][0]["message"]["content"].strip()
+    improved_translation = json_array_to_subtitle_format(improved_json, full_context, main_indices)
     
     src_text = "\n".join([f"{i+1}. {s['text']}" for i, s in enumerate(chunk["main"])])
     
@@ -159,7 +159,7 @@ def review_translation(
         chunk: Dict[str, Any],
         translated_text: str,
         system_prompt: str,
-        max_tokens: int = 2048,
+        max_tokens: int = 8192,
         temperature: float = 0.2,
         log_fn: Callable[[str], None] = print) -> str:
     """改进翻译结果"""
@@ -179,13 +179,12 @@ def review_translation(
                 {"role": "user", "content": user_prompt}
             ],
             max_tokens=max_tokens,
-            temperature=temperature
+            temperature=temperature,
+            grammar=LlamaGrammar.from_string(JSON_STRING_ARRAY),
         )
         
-        improved_translation = response["choices"][0]["message"]["content"].strip()
-        
-        # 删除<think>标签
-        improved_translation = re.sub(r"<think>[\s\S]*?</think>", "", improved_translation)
+        improved_json = response["choices"][0]["message"]["content"].strip()
+        improved_translation = json_array_to_subtitle_format(improved_json, full_context, main_indices)
         
         src_text = "\n".join([f"{i+1}. {s['text']}" for i, s in enumerate(chunk["main"])])
         logger.info("原文与译文条数不匹配")

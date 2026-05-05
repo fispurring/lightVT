@@ -15,12 +15,11 @@ def generate_system_prompt(source_lang: str, target_lang: str) -> str:
     return f"""你是一个专业的字幕翻译专家。{translate_lang}。
 
 重要规则：
-1. 只输出翻译后的文本，不要有任何解释、注释或标记
+1. 只输出翻译后的文本，禁止输出任何思考过程、分析步骤、解释或注释
 2. 保持原文的格式和语气，确保翻译自然流畅
 3. 如果遇到歌词，请直接翻译，不要用星号或其他符号替代
 4. 保持歌词的音乐符号 ♪
 5. 每个条目都以序号开头，一个条目可能有多行，不应该将一个条目的多行视为多条字幕
-6. 你可以进行深度思考，但不要在输出中包含任何 `<think>` `</think>` 标签或其内容。
 
 比如：
 [[1]]
@@ -157,7 +156,7 @@ def generate_translation_prompt(context_chunk: List[Dict], main_indices: List[in
 
 {glossary_prompt}
 
-【思维步骤】
+【翻译步骤】
 1. 阅读上下文，理解整体语境和情感色彩，但不要翻译这部分内容
 2. 分析翻译目标，理清一共有多少条字幕（一个编号及编号下面的内容算一条）
 3. 执行翻译，确保翻译出来的字幕数量和编号与翻译目标一致，术语表中的术语请严格按照对应关系翻译
@@ -166,14 +165,12 @@ def generate_translation_prompt(context_chunk: List[Dict], main_indices: List[in
 【重要指令】
 1. 只翻译"翻译目标"部分的{expected_count}条内容
 2. "上下文参考"仅用于理解语境，绝对不要翻译
-3. 保持原有编号{start_num}到{end_num}
-4. 歌词部分请直接翻译，不要用星号或其他符号替代
-5. 保持人称代词、术语翻译的一致性
-6. 格式：
-[[编号]]
-翻译内容
-
-编号与翻译内容之间一定要换行
+3. 歌词部分请直接翻译，不要用星号或其他符号替代
+4. 保持人称代词、术语翻译的一致性
+5. 输出格式（严格的 JSON 字符串数组）：
+   输出 {expected_count} 个元素的 JSON 数组，每个元素对应一条字幕的翻译：
+   ["第1条翻译", "第2条翻译"]
+   如果某条字幕需要多行显示，使用 \\n 分隔，如："第一行\\n第二行"
 
 请开始翻译："""
 
@@ -223,7 +220,7 @@ def generate_review_translation_prompt(context_chunk: List[Dict], main_indices: 
 错误译文：
 {translated_text}
 
-【思维步骤】
+【翻译步骤】
 1. 检查原文与错误译文的每一条字幕，找出翻译不匹配的条目
 2. 重新翻译原文，确保新译文每条字幕的编号和内容与原文严格对应
 
@@ -232,11 +229,9 @@ def generate_review_translation_prompt(context_chunk: List[Dict], main_indices: 
 2. 绝对不能丢失、合并或跳过任何条目
 3. 只给出译文，不要有任何解释、注释或标记
 
-翻译结果格式：
-[[编号]]
-翻译内容
-
-编号与翻译内容之间一定要换行
+输出格式（严格的 JSON 字符串数组）：
+["第1条翻译", "第2条翻译"]
+如果某条字幕需要多行显示，使用 \\n 分隔，如："第一行\\n第二行"
 
 示例1：
     原文:
@@ -255,12 +250,7 @@ def generate_review_translation_prompt(context_chunk: List[Dict], main_indices: 
     [掌声]
     
     新译文：
-    [[432]]
-    不会从
-    [[433]]
-    大地上消失
-    [[434]]
-    [掌声]
+    ["不会从", "大地上消失", "[掌声]"]
     
 示例2：
     原文:
@@ -278,12 +268,7 @@ def generate_review_translation_prompt(context_chunk: List[Dict], main_indices: 
     [掌声]
     
     新译文：
-    [[432]]
-    不会从
-    [[433]]
-    大地上消失
-    [[434]]
-    [掌声]
+    ["不会从", "大地上消失", "[掌声]"]
 """
 
 def generate_improved_translation_prompt_with_recommendation(context_chunk: List[Dict], main_indices: List[int],translated_text:str,recommendation:str) -> str:
@@ -325,9 +310,7 @@ def generate_improved_translation_prompt_with_recommendation(context_chunk: List
 3. 歌词部分请直接翻译，不要用星号或其他符号替代
 4. 只给出译文，不要有任何解释、注释或标记
 
-翻译结果格式：
-[[编号]]
-翻译内容
-
-编号与翻译内容之间一定要换行
+输出格式（严格的 JSON 字符串数组）：
+["第1条翻译", "第2条翻译"]
+如果某条字幕需要多行显示，使用 \\n 分隔，如："第一行\\n第二行"
 """
