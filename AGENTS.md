@@ -31,4 +31,4 @@ LightVT 是一款轻量级视频字幕翻译工具（v0.4.1），支持 Windows/
 - 多语言界面通过 `localization.get()` 访问
 
 ## 要求
-- 安装的llama-cpp-python必须支持cuda
+- 安装的llama-cpp-python必须支持cuda，采用预编译包，如没有符合cuda版本的预编译包，采用能兼容版本的预编译包
