@@ -29,3 +29,6 @@ LightVT 是一款轻量级视频字幕翻译工具（v0.4.1），支持 Windows/
 - 按文件名自动加载术语表
 - 翻译质量可通过 LLM 自我反思机制优化
 - 多语言界面通过 `localization.get()` 访问
+
+## 要求
+- 安装的llama-cpp-python必须支持cuda
