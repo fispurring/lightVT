@@ -145,8 +145,7 @@ def generate_translation_prompt(context_chunk: List[Dict], main_indices: List[in
     # 术语表
     glossary_prompt = glossary.generate_glossary_prompt(target_text)
     
-    return f"""/nothink
-请翻译指定的字幕内容。
+    return f"""请翻译指定的字幕内容。
 
 【上下文参考】（仅供理解语境，不要翻译）：
 {context_text}
@@ -156,11 +155,11 @@ def generate_translation_prompt(context_chunk: List[Dict], main_indices: List[in
 
 {glossary_prompt}
 
-【翻译步骤】
-1. 阅读上下文，理解整体语境和情感色彩，但不要翻译这部分内容
-2. 分析翻译目标，理清一共有多少条字幕（一个编号及编号下面的内容算一条）
-3. 执行翻译，确保翻译出来的字幕数量和编号与翻译目标一致，术语表中的术语请严格按照对应关系翻译
-4. 检查每个条目的编号和内容，确保编号和内容之间有换行，确保没有遗漏或合并条目
+【输出要求】
+1. 使用上下文理解语境和情感色彩，但不要翻译上下文
+2. 每个编号及编号下面的内容算一条字幕，输出数量必须和翻译目标一致
+3. 术语表中的术语请严格按照对应关系翻译
+4. 只输出最终 JSON，不要输出思考过程、分析步骤、解释或注释
 
 【重要指令】
 1. 只翻译"翻译目标"部分的{expected_count}条内容
@@ -172,7 +171,8 @@ def generate_translation_prompt(context_chunk: List[Dict], main_indices: List[in
    ["第1条翻译", "第2条翻译"]
    如果某条字幕需要多行显示，使用 \\n 分隔，如："第一行\\n第二行"
 
-请开始翻译："""
+请开始翻译：
+/nothink"""
 
 def generate_recommendation_prompt(context_chunk: List[Dict], main_indices: List[int],translated_text:str):
     """生成改进建议提示"""
@@ -211,8 +211,7 @@ def generate_review_translation_prompt(context_chunk: List[Dict], main_indices: 
     # 计算需要输出的字幕条数
     expected_count = len(main_indices)
     
-    return f"""/nothink
-译文与原文的序号内容不匹配，请重新翻译原文 ，新译文严格保持与原文序号内容一致。
+    return f"""译文与原文的序号内容不匹配，请重新翻译原文 ，新译文严格保持与原文序号内容一致。
 
 原文：
 {main_text}
@@ -220,9 +219,9 @@ def generate_review_translation_prompt(context_chunk: List[Dict], main_indices: 
 错误译文：
 {translated_text}
 
-【翻译步骤】
-1. 检查原文与错误译文的每一条字幕，找出翻译不匹配的条目
-2. 重新翻译原文，确保新译文每条字幕的编号和内容与原文严格对应
+【输出要求】
+1. 新译文每条字幕必须与原文严格对应
+2. 只输出最终 JSON，不要输出思考过程、分析步骤、解释或注释
 
 【重要】格式要求：
 1. 必须输出 {expected_count} 条字幕
@@ -269,6 +268,7 @@ def generate_review_translation_prompt(context_chunk: List[Dict], main_indices: 
     
     新译文：
     ["不会从", "大地上消失", "[掌声]"]
+/nothink
 """
 
 def generate_improved_translation_prompt_with_recommendation(context_chunk: List[Dict], main_indices: List[int],translated_text:str,recommendation:str) -> str:
@@ -285,8 +285,7 @@ def generate_improved_translation_prompt_with_recommendation(context_chunk: List
     # 计算需要输出的字幕条数
     expected_count = len(main_indices)
     
-    return f"""/nothink
-请根据建议改进翻译，严格保持字幕条数不变。
+    return f"""请根据建议改进翻译，严格保持字幕条数不变。
 
 上下文参考（仅供理解语境，不是要翻译的原文）：
 {context_text}
@@ -308,9 +307,10 @@ def generate_improved_translation_prompt_with_recommendation(context_chunk: List
 1. 必须输出 {expected_count} 条字幕
 2. 绝对不能丢失、合并或跳过任何条目
 3. 歌词部分请直接翻译，不要用星号或其他符号替代
-4. 只给出译文，不要有任何解释、注释或标记
+4. 只输出最终 JSON，不要输出思考过程、分析步骤、解释或注释
 
 输出格式（严格的 JSON 字符串数组）：
 ["第1条翻译", "第2条翻译"]
 如果某条字幕需要多行显示，使用 \\n 分隔，如："第一行\\n第二行"
+/nothink
 """

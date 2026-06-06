@@ -7,6 +7,33 @@ from typing import List
 logger = logging.getLogger(__name__)
 
 
+def strip_thinking_tags(response: str) -> str:
+    """仅移除显式思考标签块，不按自然语言前缀判断。"""
+    if not response:
+        return ""
+
+    tags = ['think', 'thinking', 'reasoning', 'thought']
+    for tag in ['think', 'thinking', 'reasoning', 'thought']:
+        response = re.sub(
+            rf'<{tag}>.*?</{tag}>',
+            '', response, flags=re.DOTALL | re.IGNORECASE
+        )
+
+    unclosed_match = re.search(
+        rf'<(?:{"|".join(tags)})>',
+        response,
+        flags=re.IGNORECASE
+    )
+    if unclosed_match:
+        logger.warning("检测到未闭合的思考标签，已截断标签后的内容")
+        response = response[:unclosed_match.start()]
+
+    for tag in tags:
+        response = re.sub(rf'</{tag}>', '', response, flags=re.IGNORECASE)
+
+    return response.strip()
+
+
 def strip_thinking(response: str) -> str:
     """剥除 LLM 思考过程（Reasoning/Thinking 标签及内容），保留最终答案。
 
@@ -25,11 +52,19 @@ def strip_thinking(response: str) -> str:
             rf'<{tag}>.*?</{tag}>',
             '', response, flags=re.DOTALL | re.IGNORECASE
         )
+        response = re.sub(
+            rf'<{tag}>.*$',
+            '', response, flags=re.DOTALL | re.IGNORECASE
+        )
+        response = re.sub(
+            rf'</{tag}>',
+            '', response, flags=re.IGNORECASE
+        )
 
     # 2. 尝试基于终止标记的精确剥离（DeepSeek / Qwen 部分情况）
     response = re.sub(
         r'(?:Thinking\s*Process|Reasoning|思考过程|分析过程)[:：]\s*.*?'
-        r'(?:Output[:：]|Final\s*Answer[:：]|答案[:：]|请开始提取：|请输出|JSON\s*输出|输出格式[:：])\s*',
+        r'(?:Output[:：]|Final\s*Answer[:：]|答案[:：]|译文[:：]|最终译文[:：]|请开始提取：|请输出|JSON\s*输出|输出格式[:：])\s*',
         '',
         response,
         flags=re.DOTALL | re.IGNORECASE
@@ -42,6 +77,9 @@ def strip_thinking(response: str) -> str:
         r'^\s*\*\*Thinking\s*Process\*\*',        # **Thinking Process**
         r'^\s*Thinking\s*Process[:：]',            # Thinking Process:
         r'^\s*Reasoning[:：]',                     # Reasoning:
+        r'^\s*思考过程[:：]',                       # 思考过程：
+        r'^\s*分析过程[:：]',                       # 分析过程：
+        r'^\s*分析[:：]',                           # 分析：
         r'^\s*Step\s*\d+[:：\.]',                  # Step 1:
         r'^\s*Task[:：]',                          # Task:
         r'^\s*Categories[:：]',                    # Categories:

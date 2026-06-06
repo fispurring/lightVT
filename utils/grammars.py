@@ -3,6 +3,7 @@
 import json
 import logging
 from typing import Dict, List, Any
+from .llm_utils import strip_thinking, strip_thinking_tags
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,32 @@ ws ::= [ \n\t]*
 
 # ── JSON 数组 → 字幕 [[N]] 格式转换 ──────────────────────────────────
 
+def _decode_json_string_array(json_str: str) -> List[str]:
+    """从模型输出中恢复第一个 JSON 字符串数组。"""
+    decoder = json.JSONDecoder()
+    original = json_str.strip()
+    cleaned = strip_thinking(json_str).strip()
+
+    sources = [original, cleaned] if original.startswith("[") else [cleaned, original]
+    candidates = []
+    for source in sources:
+        if source not in candidates:
+            candidates.append(source)
+        candidates.extend(source[index:] for index, char in enumerate(source) if char == "[")
+
+    for candidate in candidates:
+        if not candidate:
+            continue
+        try:
+            value, _ = decoder.raw_decode(candidate)
+        except (json.JSONDecodeError, ValueError):
+            continue
+        if isinstance(value, list) and all(isinstance(item, str) for item in value):
+            return value
+
+    return []
+
+
 def json_array_to_subtitle_format(
     json_str: str,
     full_context: List[Dict[str, Any]],
@@ -52,27 +79,24 @@ def json_array_to_subtitle_format(
         main_indices: 需要翻译的字幕在 full_context 中的索引
 
     Returns:
-        [[N]] 格式的字幕文本，如果 JSON 解析失败则返回 strip 后的原文
+        [[N]] 格式的字幕文本，如果 JSON 无法恢复则返回空字符串
     """
-    try:
-        translations = json.loads(json_str)
-        if not isinstance(translations, list):
-            logger.warning("JSON 解析成功但结果不是数组，回退")
-            return json_str
-    except (json.JSONDecodeError, ValueError) as e:
-        logger.warning(f"JSON 解析失败: {e}，回退原始输出")
-        return json_str
+    translations = _decode_json_string_array(json_str)
+    if not translations:
+        logger.warning("未能从 LLM 输出恢复 JSON 字符串数组，返回空翻译")
+        return ""
 
     result = []
     for i, translation in enumerate(translations):
         if i >= len(main_indices):
             break
         subtitle_id = full_context[main_indices[i]]['id']
+        cleaned_translation = strip_thinking_tags(translation)
         result.append(f"[[{subtitle_id}]]")
-        result.append(str(translation))
+        result.append(cleaned_translation)
 
     if not result:
-        logger.warning("JSON 数组为空，回退")
-        return json_str
+        logger.warning("JSON 数组为空，返回空翻译")
+        return ""
 
     return "\n".join(result)
