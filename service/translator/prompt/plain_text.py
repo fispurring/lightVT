@@ -24,7 +24,9 @@ def generate_translation_prompt(text: str) -> str:
     """生成纯文本翻译提示"""
     # 术语表
     glossary_prompt = glossary.generate_glossary_prompt(text)
-    return f"""请翻译以下文本：
+    return f"""/nothink
+/no_think
+请翻译以下文本：
 {text}
 
 {glossary_prompt}
@@ -56,6 +58,7 @@ def generate_improved_translation_prompt_with_recommendation(source_text: str, t
     """生成包含上下文的翻译提示"""
     # 计算需要输出的字幕条数
     return f"""/nothink
+/no_think
 请根据建议改进翻译。
 
 原文：
