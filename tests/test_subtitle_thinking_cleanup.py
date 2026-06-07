@@ -35,6 +35,23 @@ class SubtitleThinkingCleanupTest(unittest.TestCase):
         self.assertTrue(improved_prompt.rstrip().endswith("/nothink"))
         self.assertNotEqual(translation_prompt.lstrip().splitlines()[0], "/nothink")
 
+    def test_subtitle_prompts_do_not_include_placeholder_translation_examples(self):
+        prompts = [
+            subtitle_prompt.generate_translation_prompt(self.context, self.main_indices),
+            subtitle_prompt.generate_review_translation_prompt(
+                self.context, self.main_indices, "[[10]]\nOld"
+            ),
+            subtitle_prompt.generate_improved_translation_prompt_with_recommendation(
+                self.context, self.main_indices, "[[10]]\nOld", "Use natural wording."
+            ),
+        ]
+
+        for generated_prompt in prompts:
+            self.assertNotIn("第1条翻译", generated_prompt)
+            self.assertNotIn("第2条翻译", generated_prompt)
+            self.assertIn("JSON 字符串数组", generated_prompt)
+            self.assertIn("\\n", generated_prompt)
+
     def test_normal_json_array_to_subtitle_format(self):
         result = json_array_to_subtitle_format(
             '["Hello", "World"]', self.context, self.main_indices

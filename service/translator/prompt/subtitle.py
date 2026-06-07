@@ -169,8 +169,8 @@ def generate_translation_prompt(context_chunk: List[Dict], main_indices: List[in
 3. 歌词部分请直接翻译，不要用星号或其他符号替代
 4. 保持人称代词、术语翻译的一致性
 5. 输出格式（严格的 JSON 字符串数组）：
-   输出 {expected_count} 个元素的 JSON 数组，每个元素对应一条字幕的翻译：
-   ["第1条翻译", "第2条翻译"]
+   输出必须是包含 {expected_count} 个字符串元素的 JSON 数组
+   每个元素按顺序对应一条字幕的译文
    如果某条字幕需要多行显示，使用 \\n 分隔，如："第一行\\n第二行"
 
 请开始翻译："""
@@ -232,7 +232,7 @@ def generate_review_translation_prompt(context_chunk: List[Dict], main_indices: 
 3. 只给出译文，不要有任何解释、注释或标记
 
 输出格式（严格的 JSON 字符串数组）：
-["第1条翻译", "第2条翻译"]
+必须输出包含 {expected_count} 个字符串元素的 JSON 数组，每个元素按原文顺序对应一条字幕的新译文。
 如果某条字幕需要多行显示，使用 \\n 分隔，如："第一行\\n第二行"
 
 示例1：
@@ -314,6 +314,6 @@ def generate_improved_translation_prompt_with_recommendation(context_chunk: List
 4. 只输出最终 JSON，不要输出思考过程、分析步骤、解释或注释
 
 输出格式（严格的 JSON 字符串数组）：
-["第1条翻译", "第2条翻译"]
+必须输出包含 {expected_count} 个字符串元素的 JSON 数组，每个元素按原文顺序对应一条字幕的最终译文。
 如果某条字幕需要多行显示，使用 \\n 分隔，如："第一行\\n第二行"
 """
