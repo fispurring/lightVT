@@ -15,13 +15,26 @@ def init(lang: str = "en", config_dir: str = get_resource_path("assets/localizat
     _translations = load_translations()
     _default_translations = load_default_translations()
 
+def _ensure_bulgarian_target_language(translations: Dict[str, Any]) -> Dict[str, Any]:
+    if not isinstance(translations, dict):
+        return translations
+    iso_to_lang = translations.get("iso_to_lang")
+    if isinstance(iso_to_lang, dict):
+        bg_name = {"zh-CN": "保加利亚语", "zh-TW": "保加利亞語"}.get(_lang, "Bulgarian")
+        iso_to_lang.setdefault("bg", bg_name)
+    lang_to_iso = translations.get("lang_to_iso")
+    if isinstance(lang_to_iso, dict) and isinstance(iso_to_lang, dict):
+        lang_to_iso.setdefault(iso_to_lang.get("bg", "Bulgarian"), "bg")
+    return translations
+
 def load_translations() -> Dict[str, Any]:
     """加载指定语言的本地化配置文件"""
     global _lang, _config_dir
     try:
         file_path = f"{_config_dir}/{_lang}.json"
         with open(file_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
+            translations = json.load(f)
+        return _ensure_bulgarian_target_language(translations)
     except FileNotFoundError:
         print(f"本地化配置文件未找到: {file_path}")
         return {}
@@ -35,7 +48,8 @@ def load_default_translations() -> Dict[str, Any]:
     try:
         file_path = f"{_config_dir}/en.json"
         with open(file_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
+            translations = json.load(f)
+        return _ensure_bulgarian_target_language(translations)
     except FileNotFoundError:
         print(f"默认语言配置文件未找到: {file_path}")
         return {}
